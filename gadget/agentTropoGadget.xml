@@ -98,7 +98,7 @@
         </div><!-- end column -->
       </div> <!-- end row class -->
       <div class="row">
-        <div class="col-md-12" align="center"><img src="http://www.chilab.cisco.com/troposms/poweredbycisco.png"></div>
+        <div align="center"><img src="<insert path to gadget directory>/troposms/poweredbycisco.png"></div> // update with path to gadget directory      
       </div>
     </body>
 

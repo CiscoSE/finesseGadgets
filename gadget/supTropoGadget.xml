@@ -36,7 +36,6 @@
       <body class="claro">
         <br/>
       <!-- tropo gadget -->
-      <div class="container" id="SMS">
         <div class="row">
         <div class="col-md-2">
           <select class="form-control" id="team">
@@ -77,9 +76,8 @@
         </div><!-- end column -->
       </div> <!-- end row class -->
       <div class="row">
-      <div align="center"><img src="http://www.chilab.cisco.com/troposms/poweredbycisco.png"></div>
+      <div align="center"><img src="<insert path to gadget directory>/troposms/poweredbycisco.png"></div> // update with path to gadget directory
     </div>
-     </div> <!-- end container -->
     </body>
 
     <script type="text/javascript">

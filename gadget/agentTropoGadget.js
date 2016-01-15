@@ -54,6 +54,16 @@ finesse.modules.TropoGadget = (function ($) {
 
 	      $("#toMobile").change(function(){
 	        var to = $("#toMobile").val();
+
+	        // Validate NANP Phone number: 1+XXX.XXX.XXXX This can be updated to reflect your regions numbering plan
+	        if (to.length == 10){
+	        	to = "1"+ to;
+	        	$("#toMobile").val(to);
+	        }else if (to.length < 10 || to.length > 11){
+	        	$("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Please Enter a valid Mobile Number</div>");
+	        	return;
+	        };
+	        $('#msgCenter').empty();
 	        msgHistory(to);
 	      });
 
@@ -87,8 +97,8 @@ finesse.modules.TropoGadget = (function ($) {
 	          
 	          // save to parse
 	          var Interaction = Parse.Object.extend("Interaction");
-	          var testObject = new Interaction();
-	          testObject.save({to: to, msg: msg, agent: myId, team: myTeamId, teamName: myTeamName, msgId: id, msgToken: token}).then(function(object) {
+	          var newSMS = new Interaction();
+	          newSMS.save({to: to, msg: msg, agent: myId, team: myTeamId, teamName: myTeamName, msgId: id, msgToken: token}).then(function(object) {
 	          });
 	          // update message history
 	          msgHistory(to);
@@ -164,6 +174,7 @@ finesse.modules.TropoGadget = (function ($) {
     	// Clear the fields when the call is ended
 		$("#toMobile").val("");
 		$("#history tbody").html("<tr><td></td><td></td></tr>");
+		$('#msgCenter').empty();
     },
      
     /**

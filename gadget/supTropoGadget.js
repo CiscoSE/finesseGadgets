@@ -1,6 +1,10 @@
 //
-//  Created by Brad McAllister on 11/21/15.
-//  Copyright © 2016 BDM Enterprises, Inc. All rights reserved.
+//  Created by Brad McAllister 
+//  twitter: @bmcallister
+//  email: bmcallis@cisco.com
+//  Please check github for the latest version of this gadget. https://github.com/bdm1981/finesseGadgets
+//  You can also post issues or requests at github. 
+//
 
 ////////////////////////////
 ///// API Keys Go Here /////
@@ -94,7 +98,10 @@ finesse.modules.TropoGadget = (function ($) {
           success: function(results) {
             for (var i = 0; i < results.length; i++) {
               var object = results[i];
-              historyTable += "<tr><td>" + niceTime(object.createdAt + "") + "</td><td>"+object.get('teamName')+"</td><td>"+object.get('agent')+"</td><td>"+object.get('to')+"</td><td>" + object.get('msg') + "</td></tr>";
+              // format the display date to your liking. This will produce M-D-YY 12:00 AM
+              displayDate = (object.createdAt.getMonth() + 1) + "-" + object.createdAt.getDate()+ "-" +object.createdAt.getFullYear().toString().substr(2,2) + " " +object.createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); 
+            historyTable += "<tr><td>" + displayDate + "</td><td>"+object.get('agent')+"</td><td>" + object.get('msg') + "</td></tr>";
+              historyTable += "<tr><td>" + displayDate + "</td><td>"+object.get('teamName')+"</td><td>"+object.get('agent')+"</td><td>"+object.get('to')+"</td><td>" + object.get('msg') + "</td></tr>";
             }
             $("#history tbody").html(historyTable);
             gadgets.window.adjustHeight();
@@ -103,13 +110,6 @@ finesse.modules.TropoGadget = (function ($) {
             alert("Error: " + error.code + " " + error.message);
           }
         });
-      };
-
-      function niceTime(inputDate) {
-        var splitDate = inputDate.split(" ");
-        var splitTime = splitDate[4].split(":");
-        var cleanDate = splitDate[1]+"/"+splitDate[2]+"/"+splitDate[3]+" - "+splitTime[0]+":"+splitTime[1];
-        return cleanDate;
       };
 
         msgHistory(qTeam, qAgent, qNumber, qMsg);

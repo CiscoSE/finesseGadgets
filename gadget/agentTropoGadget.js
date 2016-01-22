@@ -122,7 +122,9 @@ finesse.modules.TropoGadget = (function ($) {
           $("#history tbody").html("<tr><td></td><td></td></tr>");
           for (var i = 0; i < results.length; i++) {
             var object = results[i];
-            historyTable += "<tr><td>" + niceTime(object.createdAt + "") + "</td><td>"+object.get('agent')+"</td><td>" + object.get('msg') + "</td></tr>";
+            // format the display date to your liking. This will produce M-D-YY 12:00 AM
+            displayDate = (object.createdAt.getMonth() + 1) + "-" + object.createdAt.getDate()+ "-" +object.createdAt.getFullYear().toString().substr(2,2) + " " +object.createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); 
+            historyTable += "<tr><td>" + displayDate + "</td><td>"+object.get('agent')+"</td><td>" + object.get('msg') + "</td></tr>";
           }
           $("#history tbody").html(historyTable);
           gadgets.window.adjustHeight();
@@ -131,14 +133,6 @@ finesse.modules.TropoGadget = (function ($) {
           alert("Error: " + error.code + " " + error.message);
         }
       });
-
-      	// clean up the date/time format for the web view
-      	function niceTime(inputDate) {
-	      var splitDate = inputDate.split(" ");
-	      var splitTime = splitDate[4].split(":");
-	      var cleanDate = splitDate[1]+"/"+splitDate[2]+"/"+splitDate[3]+" - "+splitTime[0]+":"+splitTime[1];
-	      return cleanDate;
-	    };
     },
 
     validate = function (to){

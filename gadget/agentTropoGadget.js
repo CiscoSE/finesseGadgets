@@ -1,6 +1,9 @@
 //
-//  Created by Brad McAllister on 11/21/15.
-//  Copyright © 2016 BDM Enterprises, Inc. All rights reserved.
+//  Created by Brad McAllister 
+//  twitter: @bmcallister
+//	email: bmcallis@cisco.com
+//  Please check github for the latest version of this gadget. https://github.com/bdm1981/finesseGadgets
+//	You can also post issues or requests at github. 
 //
 
 ////////////////////////////
@@ -9,6 +12,9 @@
 var parseAppKey = "";	// Enter your Parse Application Key
 var parseJavaKey = "";	// Enter your Parse Java Key
 var tropoToken = "";	// Enter your Tropo messaging API Key
+
+// If set to false, SMS will not be attempted.
+var isValid = true;
 
 var finesse = finesse || {};
 finesse.gadget = finesse.gadget || {};
@@ -55,21 +61,13 @@ finesse.modules.TropoGadget = (function ($) {
 	      $("#toMobile").change(function(){
 	        var to = $("#toMobile").val();
 
-	        // Validate NANP Phone number: 1+XXX.XXX.XXXX This can be updated to reflect your regions numbering plan
-	        if (to.length == 10){
-	        	to = "1"+ to;
-	        	$("#toMobile").val(to);
-	        }else if (to.length < 10 || to.length > 11){
-	        	$("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Please Enter a valid Mobile Number</div>");
-	        	return;
-	        };
-	        $('#msgCenter').empty();
-	        msgHistory(to);
+	        validate(to);
 	      });
 
 	      $("#submit").click(function(event){
 	        event.preventDefault();
 	        var to = $("#toMobile").val();
+
 	        var msg = $("#msg").val();
 	        sendSMS(to, msg);
 	      });
@@ -80,34 +78,36 @@ finesse.modules.TropoGadget = (function ($) {
     },
 
     sendSMS = function(to, msg) {
-		// adds the agent and team ID to to the SMS form
-    	var myId = user.getId(); 
-		var myTeamId = user.getTeamId();
-		var myTeamName = user.getTeamName();
+		if (isValid){
+			// adds the agent and team ID to to the SMS form
+	    	var myId = user.getId(); 
+			var myTeamId = user.getTeamId();
+			var myTeamName = user.getTeamName();
 
-	    $.ajax({
-	      url: "https://api.tropo.com/1.0/sessions?action=create&token=" + tropoToken + "&msg=" + msg + "&to=" + to, dataType: "xml",
-	      success: function(data) {
-	          var success = $(data).find('success').first().text();
-	          var token = $(data).find('token').first().text();
-	          var id = $(data).find('id').first().text();
-	          if (success) {
-	            $("#msgCenter").append("<div class=\"alert alert-success alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Your message was sent!</div>")
-	          $("#msg").val("")
-	          
-	          // save to parse
-	          var Interaction = Parse.Object.extend("Interaction");
-	          var newSMS = new Interaction();
-	          newSMS.save({to: to, msg: msg, agent: myId, team: myTeamId, teamName: myTeamName, msgId: id, msgToken: token}).then(function(object) {
-	          });
-	          // update message history
-	          msgHistory(to);
-	          }else{
-	            $("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">There was an error sending your message. Check the number and try again.</div>")
-	          };
+		    $.ajax({
+		      url: "https://api.tropo.com/1.0/sessions?action=create&token=" + tropoToken + "&msg=" + msg + "&to=" + to, dataType: "xml",
+		      success: function(data) {
+		          var success = $(data).find('success').first().text();
+		          var token = $(data).find('token').first().text();
+		          var id = $(data).find('id').first().text();
+		          if (success) {
+		            $("#msgCenter").append("<div class=\"alert alert-success alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Your message was sent!</div>")
+		          $("#msg").val("")
+		          
+		          // save to parse
+		          var Interaction = Parse.Object.extend("Interaction");
+		          var newSMS = new Interaction();
+		          newSMS.save({to: to, msg: msg, agent: myId, team: myTeamId, teamName: myTeamName, msgId: id, msgToken: token}).then(function(object) {
+		          });
+		          // update message history
+		          msgHistory(to);
+		          }else{
+		            $("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">There was an error sending your message. Check the number and try again.</div>")
+		          };
 
-	      }
-	    });
+		      }
+		    });
+		};
 	},
 
     msgHistory = function (to){
@@ -140,29 +140,79 @@ finesse.modules.TropoGadget = (function ($) {
 	      return cleanDate;
 	    };
     },
+
+    validate = function (to){
+	        // Validate NANP Phone number: 1+XXX.XXX.XXXX This can be updated to reflect your regions numbering plan
+	        if (to.length == 10){
+	        	to = "1"+ to;
+	        }else if (to.length < 10 || to.length > 11){
+	        	isValid = false;
+	        	$("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Please Enter a valid Mobile Number</div>");
+	        	return;
+	        };
+
+	    	// if the number is valid the msgCenter alerts are cleared	        
+	        $('#msgCenter').empty();
+	        isValid = true;
+	        $("#toMobile").val(to);
+	        //pull message history for valid number
+	        msgHistory(to);
+    },
     
 	displayCall = function (dialog){
+		var number = "";
+    	var direction = "";
+
+    	// determine call direction
+    	switch(dialog.getMediaProperties().callType){
+    		case "ACD_IN":
+    			direction = "inbound";
+    		break;
+    		case "TRANSFER":
+    			direction = "inbound";
+    		break;
+    		case "OTHER_IN":
+    			direction = "inbound";
+    		break;
+    		case "OUT":
+    			direction = "outbound";
+    		break;
+    		case "OUTBOUND":
+    			direction = "outbound";
+    		break;
+    		case "OUTBOUND_PREVIEW":
+    			direction = "outbound";
+    		break;
+    		default:
+    			direction = "inbound";
+		};
+
+		// set number based off the direction of the call
+    	if (direction === "inbound"){
+    		number = dialog.getFromAddress();
+    	}else{
+    		number = dialog.getMediaProperties().dialedNumber;
+    	};
 	
 	    var callVars = dialog.getMediaProperties();
-        $("#toMobile").val("1" + dialog.getFromAddress());
-        msgHistory($("#toMobile").val());
-	    
+	    validate(number);    
 	},
     
 	_processCall = function (dialog) {
-	     displayCall(dialog);
-			
+		displayCall(dialog);	
 	},
     /**
      *  Handler for additions to the Dialogs collection object.  This will occur when a new
      *  Dialog is created on the Finesse server for this user.
      */
      handleNewDialog = function(dialog) {
+
+     	 // add a dialog change handler in case the callvars didn't arrive yet
+		 dialog.addHandler('change', _processCall);
+	     
 	     // call the displayCall handler
 		 displayCall (dialog);
-        
-		 // add a dialog change handler in case the callvars didn't arrive yet
-		 dialog.addHandler('change', _processCall);
+
 		
     },
      
@@ -217,7 +267,7 @@ finesse.modules.TropoGadget = (function ($) {
 	        // Initiate the ClientServices and load the user object.  ClientServices are
 	        // initialized with a reference to the current configuration.
 	        finesse.clientservices.ClientServices.init(finesse.gadget.Config);
-			clientLogs.init(gadgets.Hub, "agentTropoGadget"); //this gadget id will be logged as a part of the message
+			clientLogs.init(gadgets.Hub, "TropoGadget"); //this gadget id will be logged as a part of the message
 	        user = new finesse.restservices.User({
 				id: id, 
                 onLoad : handleUserLoad,
@@ -232,7 +282,7 @@ finesse.modules.TropoGadget = (function ($) {
 			
 			containerServices = finesse.containerservices.ContainerServices.init();
             containerServices.addHandler(finesse.containerservices.ContainerServices.Topics.ACTIVE_TAB, function(){
-			    clientLogs.log("Agent Tropo Gadget is now visible");  // log to Finesse logger
+			    clientLogs.log("Gadget is now visible");  // log to Finesse logger
 			   // automatically adjust the height of the gadget to show the html
 		         gadgets.window.adjustHeight();
 				

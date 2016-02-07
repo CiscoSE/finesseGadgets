@@ -254,7 +254,7 @@ finesse.modules.TropoGadget = (function ($) {
 			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
 			// Initialize Firebase
-			interactionData = new Firebase("https://finessesms.firebaseio.com/");
+			interactionData = new Firebase("https://your app name.firebaseio.com/"); // Enter your application URL here
 			interactionData.authWithCustomToken(firebaseKey, function(error,result) {
 			    if (error) {
 			      console.log("Authentication Failed!", error);

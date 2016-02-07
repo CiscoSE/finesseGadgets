@@ -9,8 +9,7 @@
 ////////////////////////////
 ///// API Keys Go Here /////
 ///////////////////////////
-var parseAppKey = "";	// Enter your Parse Application Key
-var parseJavaKey = "";	// Enter your Parse Java Key
+var firebaseKey = "";	// Enter your Firebase secret here
 var tropoToken = "";	// Enter your Tropo messaging API Key
 
 // If set to false, SMS will not be attempted.
@@ -50,7 +49,7 @@ finesse.gadget.Config = (function () {
 /** @namespace */
 finesse.modules = finesse.modules || {};
 finesse.modules.TropoGadget = (function ($) {
-    var user, states, dialogs, 
+    var user, states, dialogs, interactionData,
 
     render = function () {		
 		  $("#template").change(function(){
@@ -94,11 +93,19 @@ finesse.modules.TropoGadget = (function ($) {
 		            $("#msgCenter").append("<div class=\"alert alert-success alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Your message was sent!</div>")
 		          $("#msg").val("")
 		          
-		          // save to parse
-		          var Interaction = Parse.Object.extend("Interaction");
-		          var newSMS = new Interaction();
-		          newSMS.save({to: to, msg: msg, agent: myId, team: myTeamId, teamName: myTeamName, msgId: id, msgToken: token}).then(function(object) {
+		          // save to firebase
+	              var dateSent = new Date();
+	              
+	              interactionData.push({
+	                to: to,
+	                dateSent: dateSent.toString(),
+	                msg: msg,
+	                agent: myId,
+	                team: myTeamId,
+	                teamName: myTeamName,
+					msgId: id
 		          });
+
 		          // update message history
 		          msgHistory(to);
 		          }else{
@@ -112,26 +119,19 @@ finesse.modules.TropoGadget = (function ($) {
 
     msgHistory = function (to){
 	  var historyTable = "";
-      var interaction = Parse.Object.extend("Interaction");
-      var query = new Parse.Query(interaction);
-      query.equalTo("to", to);
-      query.descending("createdAt");
-      query.limit(6); // limits this to the 6 most recent
-      query.find({
-        success: function(results) {
-          $("#history tbody").html("<tr><td></td><td></td></tr>");
-          for (var i = 0; i < results.length; i++) {
-            var object = results[i];
-            // format the display date to your liking. This will produce M-D-YY 12:00 AM
-            displayDate = (object.createdAt.getMonth() + 1) + "-" + object.createdAt.getDate()+ "-" +object.createdAt.getFullYear().toString().substr(2,2) + " " +object.createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); 
-            historyTable += "<tr><td>" + displayDate + "</td><td>"+object.get('agent')+"</td><td>" + object.get('msg') + "</td></tr>";
-          }
-          $("#history tbody").html(historyTable);
-          gadgets.window.adjustHeight();
-        },
-        error: function(error) {
-          alert("Error: " + error.code + " " + error.message);
-        }
+
+      interactionData.orderByChild("to").equalTo(to).limitToLast(6).once('value', function(snapshot) {
+        
+        if (snapshot.exists()) {
+          $.each(snapshot.val(), function(index, value) {
+            var dateSent = new Date(value.dateSent);
+            var dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDay()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
+            historyTable += "<tr><td>"+ dateSent +"</td><td>"+value.agent+"</td><td>" + value.msg + "</td></tr>";
+          }); 
+        } ;
+     
+        $("#history tbody").html(historyTable); 
+        gadgets.window.adjustHeight();
       });
     },
 
@@ -253,8 +253,15 @@ finesse.modules.TropoGadget = (function ($) {
 			id = prefs.getString("id");
 			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
-			// Initialize Parse
-			Parse.initialize(parseAppKey, parseJavaKey);
+			// Initialize Firebase
+			interactionData = new Firebase("https://finessesms.firebaseio.com/");
+			interactionData.authWithCustomToken(firebaseKey, function(error,result) {
+			    if (error) {
+			      console.log("Authentication Failed!", error);
+			    } else {
+			      console.log("Authenticated successfully");
+			    }
+			});
 
 	        gadgets.window.adjustHeight();
 	        

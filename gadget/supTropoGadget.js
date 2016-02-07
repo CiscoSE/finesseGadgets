@@ -9,8 +9,7 @@
 ////////////////////////////
 ///// API Keys Go Here /////
 ///////////////////////////
-var parseAppKey = ""; // Enter your Parse Application Key
-var parseJavaKey = ""; // Enter your Parse Java Key
+var firebaseKey = ""; // Enter your Firebase secret
 
 
 var finesse = finesse || {};
@@ -47,7 +46,7 @@ finesse.gadget.Config = (function () {
 /** @namespace */
 finesse.modules = finesse.modules || {};
 finesse.modules.TropoGadget = (function ($) {
-    var user,
+    var user, interactionData,
 
     render = function () {
 
@@ -71,44 +70,66 @@ finesse.modules.TropoGadget = (function ($) {
       
       function msgHistory(qTeam, qAgent, qNumber, qMsg) {
         var historyTable = "";
-        var interaction = Parse.Object.extend("Interaction");
-        var query = new Parse.Query(interaction);
+        var queryString = "";
 
-        if (qTeam){
-          query.equalTo("team", qTeam);
+        if(qTeam){
+          queryString += "value.team === qTeam";
         }else{
-        	query.containedIn("team", teamArray);
+          var myTeam = "";
+          var teamsArray = user.getSupervisedTeams()
+          var i = teamsArray.length;
+          for (t = 0; t < i; t++){
+            if (t == 1 && i > 1){
+              queryString += "value.team === \"" + teamsArray[t].id + "\" || ";
+            }else if (t < i - 1) {
+              queryString += "value.team === \"" + teamsArray[t].id + "\" || ";
+            }else{
+              queryString += "value.team === \"" + teamsArray[t].id + "\"";
+            };
+          };
         };
 
-        if (qAgent){
-          query.equalTo("agent", qAgent);
-        };
-
-        if (qNumber){
-          query.equalTo("to", qNumber);
-        };
-
-        if (qMsg){
-          query.contains("msg", qMsg);
-        };
-        
-        query.descending("createdAt");
-        //query.limit(6); // limits this to the 6 most recent
-        query.find({
-          success: function(results) {
-            for (var i = 0; i < results.length; i++) {
-              var object = results[i];
-              // format the display date to your liking. This will produce M-D-YY 12:00 AM
-              displayDate = (object.createdAt.getMonth() + 1) + "-" + object.createdAt.getDate()+ "-" +object.createdAt.getFullYear().toString().substr(2,2) + " " +object.createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); 
-            historyTable += "<tr><td>" + displayDate + "</td><td>"+object.get('agent')+"</td><td>" + object.get('msg') + "</td></tr>";
-              historyTable += "<tr><td>" + displayDate + "</td><td>"+object.get('teamName')+"</td><td>"+object.get('agent')+"</td><td>"+object.get('to')+"</td><td>" + object.get('msg') + "</td></tr>";
-            }
-            $("#history tbody").html(historyTable);
-            gadgets.window.adjustHeight();
-          },
-          error: function(error) {
-            alert("Error: " + error.code + " " + error.message);
+        if(qAgent){
+          if (queryString.length > 1){
+            queryString += " && ";
           }
+          queryString += "value.agent === qAgent";
+        };
+
+        if(qNumber){
+          if (queryString.length > 1){
+            queryString += " && ";
+          }
+          queryString += "value.to === qNumber";
+        };
+
+        if(qMsg){
+          if (queryString.length > 1){
+            queryString += " && ";
+          }
+          // convert message text to lowercase for searching
+          qMsg = qMsg.toLowerCase();
+          queryString += "(value.msg.toLowerCase().indexOf(qMsg) > -1)";
+        };
+
+        interactionData.limitToLast(1000).once('value', function(snapshot) {
+        
+          if (snapshot.exists()) {
+            $.each(snapshot.val(), function(index, value) {
+              if(eval(queryString)){
+                showResults(value);
+              };
+
+            }); 
+          };
+              function showResults(value){
+                var dateSent = new Date(value.dateSent);
+                var dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDay()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
+                historyTable += "<tr><td>" + dateSent + "</td><td>"+value.teamName+"</td><td>"+value.agent+"</td><td>"+value.to+"</td><td>"+value.msg+"</td></tr>";
+              };
+
+          $("#history tbody").html(historyTable); 
+          gadgets.window.adjustHeight();
         });
       };
 
@@ -156,8 +177,15 @@ finesse.modules.TropoGadget = (function ($) {
 			id = prefs.getString("id");
 			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
-      // Initialize Parse
-      Parse.initialize(parseAppKey, parseJavaKey);
+      // Initialize Firebase
+      interactionData = new Firebase("https://finessesms.firebaseio.com/");
+      interactionData.authWithCustomToken(firebaseKey, function(error,result) {
+          if (error) {
+            console.log("Authentication Failed!", error);
+          } else {
+            console.log("Authenticated successfully");
+          }
+      });
 
 	    gadgets.window.adjustHeight();
 	        

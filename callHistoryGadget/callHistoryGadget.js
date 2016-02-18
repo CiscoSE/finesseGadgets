@@ -227,6 +227,9 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    				direction = "Consult To";
 		    			};
 		    		break;
+		    		case "SUPERVISOR_MONITOR":
+		    			direction = "SM";
+		    		break;
 		    		default:
 		    			number = dialog.getFromAddress();
 		    			direction = "n/a";
@@ -236,7 +239,9 @@ finesse.modules.callHistoryGadget = (function ($) {
 
 		// check for additional call dialogs
 		for(var i = 0; i < trackDialog.length; i++) {
-    		if(trackDialog[i].id == dialog._id) {
+    		if (direction == "SM"){
+				//do not write to history
+			}else if(trackDialog[i].id == dialog._id) {
         		trackDialog[i].counters.stateChangeTime = dialog.getParticipantTimerCounters(user.getExtension()).stateChangeTime;
        	 		// Save Call to callHistory Gadget
 				recordCall(user.getId(), number, direction, trackDialog[i].counters);

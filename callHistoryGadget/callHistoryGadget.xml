@@ -34,20 +34,35 @@
     <!-- callHistory gadget -->
      <div class="row">
         <div class="col-md-6">
-          <h4>Today's Call History</h4>
-          <table class="table table-striped" id="history">
+          <!-- <h4>Today's Call History</h4> 
+          <span><p style="display: inline-block;">In: </p><p id="incoming" style="display: inline-block;"></p> <br/><p style="display: inline-block;">Out: </p><p id="outgoing" style="display: inline-block;"></p></span> -->
+            
+        <table class="table table-striped" id="tally">
+            <thead>
+                <tr>
+                    <th>Call Type</th>
+                    <th>Total Calls</th>
+                    <th>Total Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <table class="table table-striped" id="history">
             <thead>
               <tr>
-                <th width="15%">Time</th>
-                <th width="15%">Direction</th>
-                <th width="15%">Duration</th>
-                <th width="20%">Number</th>
-                <th width="30%">Action</th>
+                <th width="15%" id="date">Time</th>
+                <th width="15%" id="direction">Type</th>
+                <th width="15%" id="duration">Duration</th>
+                <th width="20%" id="number">Number</th>
+                <th width="15%">Action</th>
+                <th width="20%" id="detail">Detail</th>
               </tr>
             </thead>
             <tbody>
             </tbody>
-          </table>
+        </table>
         <div id="mode"></div>
         </div><!-- end column -->
       </div> <!-- end row class -->

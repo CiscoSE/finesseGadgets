@@ -70,25 +70,34 @@ finesse.modules.callHistoryGadget = (function ($) {
 			// check to make sure localstorage contained calls
 			if (retrievedArray){
 				// check to make sure data isn't over a day old
-				if ((start - new Date(retrievedArray[0].date)) < 18800000 ){ // 10 hours 28401109
-					var delta = start - new Date(retrievedArray[0].date);
+				var currentDay = start.getDate();
+				var currentMonth = start.getMonth();
+
+				// sort calls so that the oldest call is first.
+				var sortTime = sortObjectBy(retrievedArray, "date", "D");
+
+				var retrievedDate = new Date(sortTime[0].date);
+				var retrievedDay = retrievedDate.getDate();
+				var retrievedMonth = retrievedDate.getMonth();
+
+				if ((currentMonth == retrievedMonth && currentDay > retrievedDay) || (currentMonth > retrievedMonth && currentDay < retrievedDay)){
+					clientLogs.log("purging data!");
+					// Purge cached data
+					localStorage.removeItem(user.getId() + "_calls");
+					calls = [];
+				}else{
+					//creating date objects for cached data
 					for(var i = 0; i < retrievedArray.length; i++) {
 			    		retrievedArray[i].date = new Date(retrievedArray[i].date);
 					};
-					console.log("******************");
-					console.log(delta);
-					// write calls to local array
+					clientLogs.log("using cached data");
+					// Write cached calls to local array
 					calls = retrievedArray;
-					// Tally Existing calls
+					// Tally Existing Calls
 					tallyCalls();
-				}else{
-					// purge old data
-					console.log("purge data");
-					localStorage.removeItem(user.getId() + "_calls");
-
 				};
-			};
-		};
+			}; // end if retreived Array
+		}; // end call length
 
 		$(document).on('click', '#date, #direction, #duration, #number, #detail', function() {
 			if(sortMethod == $(this).attr("id") && sortDir == "A"){
@@ -160,6 +169,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 		};
 
 		// Add call information to the calls array
+		clientLogs.log("Call added to local array");
 		calls.push(myCall);
 		sortBy(sortMethod, sortDir);
 
@@ -305,7 +315,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 	    	if (num.length == 11){
 	    		num = accessCode+num;
 	    	};
-			historyTable += "<tr><td>"+ calls[i].date.toLocaleTimeString() +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall(" + num + ")\">Call Back</button></td><td>"+ detail +"</td></tr>";
+			historyTable += "<tr><td>"+ calls[i].date.toLocaleTimeString() +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall(" + num + ")\">Call Back</button></td></tr>";
 		};
 		$("#history tbody").html(historyTable);
 
@@ -334,6 +344,8 @@ finesse.modules.callHistoryGadget = (function ($) {
      	currentCall.from = dialog.getFromAddress();
      	currentCall.counters = dialog.getParticipantTimerCounters(user.getExtension());
      	trackDialog.push(currentCall);
+     	clientLogs.log("New Call arrived");
+     	clientLogs.log(dialog);
 
      	 // add a dialog change handler in case the callvars didn't arrive yet
 		 dialog.addHandler('change', _processCall);
@@ -359,7 +371,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    			direction = "Inbound";
 		    		break;
 		    		case "TRANSFER":
-		    			number = dialog.getToAddress();
+		    			number = dialog.getFromAddress();
 		    			direction = "xfer in";
 		    		break;
 		    		case "OTHER_IN":

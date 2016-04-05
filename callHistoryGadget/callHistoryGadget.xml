@@ -56,8 +56,8 @@
                 <th width="15%" id="direction">Type</th>
                 <th width="15%" id="duration">Duration</th>
                 <th width="20%" id="number">Number</th>
-                <th width="15%">Action</th>
                 <th width="20%" id="detail">Detail</th>
+                <th width="15%">Action</th>
               </tr>
             </thead>
             <tbody>

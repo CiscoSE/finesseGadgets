@@ -1,9 +1,9 @@
 //
-//  Created by Brad McAllister 
+//  Created by Brad McAllister
 //  twitter: @bmcallister
 //	email: bmcallis@cisco.com
 //  Please check github for the latest version of this gadget. https://github.com/bdm1981/finesseGadgets
-//	You can also post issues or requests at github. 
+//	You can also post issues or requests at github.
 //
 
 var start = new Date();
@@ -12,13 +12,12 @@ start.setHours(0,0,0,0);
 // create array for tracking calls and one for tracking active dialogs
 var calls = [];
 var trackDialog = [];
-var callCounter = {"inbound":{"count": 0, "duration": 0}, "outbound": {"count": 0, "duration": 0}};	
+var callCounter = {"inbound":{"count": 0, "duration": 0}, "outbound": {"count": 0, "duration": 0}};
 
-// access Code - When set, the access code will be prepending to the callback number. For Example "9"
-var accessCode = "9";
+var accessCode = config.accessCode;
 
 //Agent state change preferences
-var reasonID = { id: '5' }; // This reasonID must be created in UCCX
+var reasonID = config.reasonID;
 var wasReady = false; // This allows the gadget to move the agent back into a ready state after a callback is made.
 
 //Default Sorting order
@@ -59,9 +58,10 @@ finesse.gadget.Config = (function () {
 /** @namespace */
 finesse.modules = finesse.modules || {};
 finesse.modules.callHistoryGadget = (function ($) {
-    var user, states, dialogs, 
-    
+    var user, states, dialogs,
+
     render = function () {
+			console.log(config);
 		// Load history from local storage if present
 		if (calls.length < 1){
 			// Retrieve the object from storage
@@ -81,16 +81,17 @@ finesse.modules.callHistoryGadget = (function ($) {
 				var retrievedMonth = retrievedDate.getMonth();
 
 				if ((currentMonth == retrievedMonth && currentDay > retrievedDay) || (currentMonth > retrievedMonth && currentDay < retrievedDay)){
-					clientLogs.log("purging data!");
+					clientLogs.log("Purging old data!");
 					// Purge cached data
 					localStorage.removeItem(user.getId() + "_calls");
+					localStorage.removeItem(user.getId() + "_trackDialog");
 					calls = [];
 				}else{
 					//creating date objects for cached data
 					for(var i = 0; i < retrievedArray.length; i++) {
 			    		retrievedArray[i].date = new Date(retrievedArray[i].date);
 					};
-					clientLogs.log("using cached data");
+					clientLogs.log("Using cached data");
 					// Write cached calls to local array
 					calls = retrievedArray;
 					// Tally Existing Calls
@@ -113,7 +114,6 @@ finesse.modules.callHistoryGadget = (function ($) {
 			}
 			// Update calls in local storage
 			localStorage.setItem(user.getId() + "_calls", JSON.stringify(calls));
-			
 		});
 
 		// Loads call history on startup
@@ -150,7 +150,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 
 		var callDate = new Date(counters.startTime);
 		var myCall = new Object();
-		
+
 		myCall.date = callDate;
 		myCall.agent = agent;
 		myCall.number = number;
@@ -158,7 +158,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 		myCall.seconds = seconds;
 		myCall.duration = duration;
 		myCall.detail = detail; // set to the call Variable you would like displayed in the "detail" column of the call History
-		
+
 		// Increment call Tally and durations
 		if(direction == "Inbound" || direction == "xfer in"){
 			callCounter.inbound.count++;
@@ -197,11 +197,11 @@ finesse.modules.callHistoryGadget = (function ($) {
 		if(seconds <= 9){
 			var duration = "00:00:0"+seconds;
 		}else{
-			var duration = "00:00:" + seconds; 
-		};                   
+			var duration = "00:00:" + seconds;
+		};
 
 		// calculate call in minutes
-		if (seconds > 60){                                      
+		if (seconds > 60){
 			var minutes = Math.floor(seconds / 60);
 			// check to for single digits. If a single digit prepend a 0
 			if(minutes <= 9){
@@ -259,7 +259,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 	            return array.sort(function (a, b) {
 	                var x = a[srtKey].toLowerCase(); var y = b[srtKey].toLowerCase();
 	                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-	            });    
+	            });
 	        }else{
 	        return array.sort(function (a, b) {
 	            var x = a[srtKey]; var y = b[srtKey];
@@ -274,7 +274,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 	            return array.sort(function (a, b) {
 	                var x = a[srtKey].toLowerCase(); var y = b[srtKey].toLowerCase();
 	                return ((x > y) ? -1 : ((x < y) ? 1 : 0));
-	            });    
+	            });
 	        }else{
 				return array.sort(function (a, b) {
 	            var x = a[srtKey]; var y = b[srtKey];
@@ -325,43 +325,53 @@ finesse.modules.callHistoryGadget = (function ($) {
     		if(trackDialog[i].id == dialog._id) {
         		trackDialog[i].to = dialog.getToAddress();
        	 		break;
-    		};	
+    		};
 		};
 	},
 
 		_processCall = function (dialog) {
-			 displayCall (dialog);
+			displayCall (dialog);
 	},
     /**
      *  Handler for additions to the Dialogs collection object.  This will occur when a new
      *  Dialog is created on the Finesse server for this user.
      */
      handleNewDialog = function(dialog) {
+			// Capture important details about the current call dialog
      	var currentCall = new Object();
      	currentCall.id = dialog._id;
      	currentCall.type = dialog.getMediaProperties().callType;
      	currentCall.to = dialog.getToAddress();
      	currentCall.from = dialog.getFromAddress();
      	currentCall.counters = dialog.getParticipantTimerCounters(user.getExtension());
+			// Store this call information in the trackDiaglog array each new dialog update clear the dialog info.
      	trackDialog.push(currentCall);
-     	clientLogs.log("New Call arrived");
-     	clientLogs.log(dialog);
+			//Write the trackDiaglog to localStorage. this will be reloaded if the browser is closed or refreshed
+			localStorage.setItem(user.getId() + "_trackDialog", JSON.stringify(trackDialog));
+     	clientLogs.log("New call arrived");
 
      	 // add a dialog change handler in case the callvars didn't arrive yet
 		 dialog.addHandler('change', _processCall);
-	     
+
 	     // call the displayCall handler
 		 displayCall (dialog);
     },
-     
+
     /**
      *  Handler for deletions from the Dialogs collection object for this user.  This will occur
      *  when a Dialog is removed from this user's collection (example, end call)
      */
     handleEndDialog = function(dialog) {
+			clientLogs.log("Handling End Dialog");
     	var number = "";
     	var direction = "";
-		
+
+			// If the trackDialog in memory is empty, load data from localStorage
+			if(trackDialog.length < 1){
+				clientLogs.log("Loading Track Dialog from localStorage");
+				trackDialog = JSON.parse(localStorage.getItem(user.getId() + "_trackDialog"));
+			};
+
 		// determine call direction
 		for (var i = 0; i < trackDialog.length; i++){
 			if (trackDialog[i].id == dialog._id){
@@ -417,9 +427,11 @@ finesse.modules.callHistoryGadget = (function ($) {
 				var callVars = dialog.getMediaProperties();
         		trackDialog[i].counters.stateChangeTime = dialog.getParticipantTimerCounters(user.getExtension()).stateChangeTime;
        	 		// Save Call to callHistory Gadget
-				recordCall(user.getId(), number, direction, trackDialog[i].counters, callVars["callVariable6"]);
+				recordCall(user.getId(), number, direction, trackDialog[i].counters, callVars[config.callDetail]);
+				// remove call from trackDiaglog in memory and localstorage
 				trackDialog.splice(i, 1);
-    		};	
+				localStorage.removeItem(user.getId() + "_trackDialog");
+    		};
 		};
 
 		// Set agent ready if required
@@ -428,19 +440,19 @@ finesse.modules.callHistoryGadget = (function ($) {
 			wasReady = false;
 		};
     },
-    
+
     /**
      * Handler for makeCall when successful.
      */
     makeCallSuccess = function(rsp) {
     },
-    
+
     /**
      * Handler for makeCall when error occurs.
      */
     makeCallError = function(rsp) {
     },
-     
+
     /**
      * Handler for the onLoad of a User object.  This occurs when the User object is initially read
      * from the Finesse server.  Any once only initialization should be done within this function.
@@ -450,19 +462,19 @@ finesse.modules.callHistoryGadget = (function ($) {
         // removals
         dialogs = user.getDialogs( {
         	onCollectionAdd : handleNewDialog,
-            onCollectionDelete : handleEndDialog
+          onCollectionDelete : handleEndDialog
         });
 
         render();
     },
-      
+
     /**
      *  Handler for all User updates
      */
     handleUserChange = function(userevent) {
         render();
     };
-	    
+
 	/** @scope finesse.modules.SampleGadget */
 	return {
 	    /**
@@ -475,7 +487,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 	            user.setState(states.NOT_READY);
 	        }
 	    },
-	    
+
 	    /**
 	     * Make a call to the number
 	     */
@@ -492,7 +504,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 				error: makeCallError
 			});
 	    },
-	        
+
 	    /**
 	     * Performs all initialization for this gadget
 	     */
@@ -502,31 +514,31 @@ finesse.modules.callHistoryGadget = (function ($) {
 			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
 	        gadgets.window.adjustHeight('680');
-	        
+
 	        // Initiate the ClientServices and load the user object.  ClientServices are
 	        // initialized with a reference to the current configuration.
 	        finesse.clientservices.ClientServices.init(finesse.gadget.Config);
 			clientLogs.init(gadgets.Hub, "Call History Gadget"); //this gadget id will be logged as a part of the message
 	        user = new finesse.restservices.User({
-				id: id, 
+				id: id,
                 onLoad : handleUserLoad,
                 onChange : handleUserChange
             });
-	            
+
 	        states = finesse.restservices.User.States;
-			
+
 			// Initiate the ContainerServices and add a handler for when the tab is visible
 			// to adjust the height of this gadget in case the tab was not visible
 			// when the html was rendered (adjustHeight only works when tab is visible)
-			
+
 			containerServices = finesse.containerservices.ContainerServices.init();
             containerServices.addHandler(finesse.containerservices.ContainerServices.Topics.ACTIVE_TAB, function(){
 			    clientLogs.log("Call History Gadget is now visible");  // log to Finesse logger
 			   // automatically adjust the height of the gadget to show the html
 
 		         gadgets.window.adjustHeight('680');
-				
-				   
+
+
 			   });
             containerServices.makeActiveTabReq();
 	    }

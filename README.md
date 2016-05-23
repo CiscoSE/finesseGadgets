@@ -1,9 +1,15 @@
-# finesseGadgets
+# Call History Gadget
+![](http://me.bmcallister.com/gadgetimages/callHistoryOverview.jpg)
 
-The Call History Gadget is now live! Installation instructions are <a href="https://github.com/bdm1981/finesseGadgets/wiki/Call-History-Gadget-Installation-Guide">Here</a>
+1. Tally of the agents total inbound/outbound calls and duration for the day
+2. Data can be sorted by clicking on the table header
+3. The Detail field can show information captured by the IVR. For Example an account number
+4. The Call Back button puts the agents in a not ready state of your choosing, prepends an access code for external numbers, places the call, and then puts the agent back into a ready state when the call is complete.
 
-*** UPDATE ***
-Parse.com announced that they will be shutting down service January 2017. Unfortunately, they also stopped accepting new accounts. I have updated the gadget to use Firebase as the cloud DB. The installation instructions and code have been updated to reflect this.
+Installation instructions are <a href="https://github.com/bdm1981/finesseGadgets/wiki/Call-History-Gadget-Installation-Guide">Here</a>
+
+# Cisco SMS Gadget
+![](http://me.bmcallister.com/gadgetimages/ciscoSMSGadget.jpg)
 
 SMS Gadget Installation Guide is available <a href="https://github.com/bdm1981/finesseGadgets/wiki/SMS-Gadget-Installation-Guide">Here</a>
 

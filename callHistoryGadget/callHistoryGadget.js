@@ -61,7 +61,7 @@ finesse.modules.callHistoryGadget = (function ($) {
     var user, states, dialogs,
 
     render = function () {
-			console.log(config);
+			clientLogs.log('Loading the following config parameters: ' + JSON.stringify(config));
 		// Load history from local storage if present
 		if (calls.length < 1){
 			// Retrieve the object from storage
@@ -154,16 +154,16 @@ finesse.modules.callHistoryGadget = (function ($) {
 		myCall.date = callDate;
 		myCall.agent = agent;
 		myCall.number = number;
-		myCall.direction = direction;
+		myCall.direction = direction.desc;
 		myCall.seconds = seconds;
 		myCall.duration = duration;
 		myCall.detail = detail; // set to the call Variable you would like displayed in the "detail" column of the call History
 
 		// Increment call Tally and durations
-		if(direction == "Inbound" || direction == "xfer in"){
+		if(direction.dir == "in"){
 			callCounter.inbound.count++;
 			callCounter.inbound.duration += seconds;
-		}else if(direction == "Outbound"){
+		}else if(direction.dir == "out"){
 			callCounter.outbound.count++;
 			callCounter.outbound.duration += seconds;
 		};
@@ -364,7 +364,7 @@ finesse.modules.callHistoryGadget = (function ($) {
     handleEndDialog = function(dialog) {
 			clientLogs.log("Handling End Dialog");
     	var number = "";
-    	var direction = "";
+    	var direction = {};
 
 			// If the trackDialog in memory is empty, load data from localStorage
 			if(trackDialog.length < 1){
@@ -378,50 +378,68 @@ finesse.modules.callHistoryGadget = (function ($) {
 				switch(trackDialog[i].type){
 		    		case "ACD_IN":
 		    			number = dialog.getFromAddress();
-		    			direction = "Inbound";
+		    			direction.desc = "Inbound";
+              direction.dir = "in";
 		    		break;
 		    		case "TRANSFER":
 		    			number = dialog.getFromAddress();
-		    			direction = "xfer in";
+		    			direction.desc = "Transfer In";
+              direction.dir = "in";
 		    		break;
 		    		case "OTHER_IN":
 		    			number = dialog.getFromAddress();
-		    			direction = "Inbound";
+		    			direction.desc = "Inbound";
+              direction.dir = "in";
 		    		break;
 		    		case "OUT":
 		    			number = dialog.getToAddress();
-		    			direction = "Outbound";
+		    			direction.desc = "Outbound";
+              direction.dir = "out";
 		    		break;
 		    		case "OUTBOUND":
 		    			number = dialog.getToAddress();
-		    			direction = "Outbound";
+		    			direction.desc = "Outbound";
+              direction.dir = "out";
 		    		break;
 		    		case "OUTBOUND_PREVIEW":
 		    			number = dialog.getToAddress();
-		    			direction = "preview out";
+		    			direction = "Preview Out";
+              direction.dir = "out";
 		    		break;
 		    		case "CONSULT":
 		    			if (dialog.getToAddress() == user.getExtension()){
 		    				number = dialog.getFromAddress();
-		    				direction = "Consult From";
+		    				direction.desc = "Consult From";
+                direction.dir = "in";
 		    			}else{
 		    				number = dialog.getToAddress();
-		    				direction = "Consult To";
+		    				direction.desc = "Consult To";
+                direction.dir = "out";
 		    			};
 		    		break;
+            case "CONFERENCE":
+              number = dialog.getFromAddress();
+              direction.desc = "Conference In";
+              direction.dir = "in";
+              clientLogs.log(dialog.getParticipants());
+            break;
 		    		case "SUPERVISOR_MONITOR":
-		    			direction = "SM";
+		    			direction.desc = "SM";
+              direction.dir = "SM";
 		    		break;
 		    		default:
 		    			number = dialog.getFromAddress();
-		    			direction = "n/a";
+		    			direction.desc = "n/a";
+              direction.dir = "n/a";
 				};
 			};
 		};
 
+    clientLogs.log("Classified calls as: "+ JSON.stringify(direction));
+
 		// check for additional call dialogs
 		for(var i = 0; i < trackDialog.length; i++) {
-			if (direction == "SM"){
+			if (direction.dir == "SM"){
 				//do not write to history
 			}else if(trackDialog[i].id == dialog._id) {
 				var callVars = dialog.getMediaProperties();

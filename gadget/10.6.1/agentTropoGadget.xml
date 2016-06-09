@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+
+<ModulePrefs title="Cisco Tropo SMS"
+        description="Cisco Tropo SMS"
+        thumbnail="http://localhost:8080/">
+
+    <Require feature="settitle" />
+    <Require feature="dynamic-height" />
+    <Require feature="pubsub-2" />
+    <Require feature="setprefs" />
+</ModulePrefs>
+
+<Content type="html">
+<![CDATA[
+    <!DOCTYPE html>
+    <!-- Styling -->
+    <link rel="stylesheet" href="TropoGadget.css" type="text/css" />
+    <link rel="stylesheet" href="bootstrap.min.css" type="text/css" />
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="/desktop/assets/js/jquery.min.js"></script>
+   
+    <!-- Finesse Library -->
+    <script type="text/javascript" src="/desktop/assets/js/finesse.js"></script>
+
+    <!-- Gadget Business Logic -->
+    <script type="text/javascript" src="agentTropoGadget.js"></script>
+
+    <!-- Bootstrap Library -->
+    <script type="text/javascript" src="bootstrap.min.js"></script>
+
+    <!-- Firebase Library -->
+    <script src="http://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+
+      <body class="claro">
+        <br/>
+      <!-- tropo gadget -->
+        <div class="row">
+          <div class="col-md-6">
+          <div id="msgCenter"></div>
+            <form class="form-horizontal">
+            <fieldset id="dialogfieldset" class="outline">
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="to">Mobile Number</label>  
+              <div class="col-md-8">
+              <input type="text" name="to"  placeholder="Mobile Number" class="form-control input-md" id="toMobile">
+                
+              </div>
+            </div>
+
+            <!-- Textarea -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="msg">Text Message</label>
+              <div class="col-md-8">                     
+                <textarea class="form-control" id="msg" name="msg"></textarea>
+              </div>
+            </div>
+
+            <!-- Update with your own custom template reponses -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="template">Template Response</label>
+              <div class="col-md-8">
+                <select id="template" name="template" class="form-control">
+                  <option value="" disabled selected>Select a Template</option>
+                  <option value="Your order has shipped.">Your order has shipped.</option>
+                  <option value="Thank you for calling Cisco TAC. You Service Request number is: **insert** for your records.">Thank you for calling Cisco TAC.</options>
+                  <option value="Thanks for calling Cisco. Use the following coupon code on your next order: CISCO123">Thanks for calling Cisco. Use the following coupon code on your next order: CISCO123</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Button -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="submit"></label>
+              <div class="col-md-8">
+                <button id="submit" name="submit" class="btn btn-success">Send</button>
+              </div>
+            </div>
+            </fieldset>
+            </form>
+        </div><!-- end column -->
+        <div class="col-md-6">
+          <h4>Message History</h4>
+          <table class="table table-striped" id="history">
+            <thead>
+              <tr>
+                <th width="20%">Date - Time</th>
+                <th width="10%">Agent</th>
+                <th width="70%">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div><!-- end column -->
+      </div> <!-- end row class -->
+      <div class="row">
+        <div align="center"><img src="poweredbycisco.png"></div> <!-- update with path to gadget directory -->  
+      </div>
+    </body>
+
+    <script type="text/javascript">
+        gadgets.HubSettings.onConnect = function () {
+            finesse.modules.TropoGadget.init();
+        };
+    </script>
+]]>
+</Content>
+</Module>

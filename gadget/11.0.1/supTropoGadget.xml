@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+
+<ModulePrefs title="Cisco Tropo SMS"
+        description="Cisco Tropo SMS"
+        thumbnail="http://localhost:8080/">
+        
+    <Require feature="settitle" />
+    <Require feature="dynamic-height" />
+    <Require feature="pubsub-2" />
+    <Require feature="setprefs" />
+</ModulePrefs>
+
+<Content type="html">
+<![CDATA[
+    <!DOCTYPE html>
+    <!-- Styling -->
+    <link rel="stylesheet" href="TropoGadget.css" type="text/css" />
+    <link rel="stylesheet" href="bootstrap.min.css" type="text/css" />
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="/desktop/assets/js/jquery.min.js"></script>
+   
+    <!-- Finesse Library -->
+    <script type="text/javascript" src="/desktop/assets/js/finesse.js"></script>
+
+    <!-- Gadget Business Logic -->
+    <script type="text/javascript" src="supTropoGadget.js"></script>
+
+    <!-- Bootstrap Library -->
+    <script type="text/javascript" src="bootstrap.min.js"></script>
+
+    <!-- Firebase Library -->
+    <script src="http://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+
+      <body class="claro">
+        <br/>
+      <!-- tropo gadget -->
+        <div class="row">
+        <div class="col-md-2">
+          <select class="form-control" id="team">
+            <option disabled selected>Filter by Team</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="text" class="form-control" placeholder="Agent ID" id="agent">
+        </div>
+        <div class="col-md-2">
+          <input type="text" class="form-control" placeholder="Search Number" id="msgNumber">
+        </div>
+        <div class="col-md-2">
+          <input type="text" class="form-control" placeholder="Search Messages" id="msgBody">
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-success" id="search">Search</button>
+          <button type="submit" class="btn btn-warning" id="reset">Reset Filter</button>
+        </div>
+        </div> <!-- End of Search Row -->
+        <div class="row">
+          <div class="col-md-12">
+          <h4>Message History</h4>
+          </div> <!-- end of search row -->
+          <table class="table table-striped" id="history">
+            <thead>
+              <tr>
+                <th width="10%">Date - Time</th>
+                <th width="10%">Team</th>
+                <th width="10%">Agent</th>
+                <th width="10%">Number</th>
+                <th width="60%">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div><!-- end column -->
+      </div> <!-- end row class -->
+      <div class="row">
+      <div align="center"><img src="poweredbycisco.png"></div> <!-- update with path to gadget directory -->  
+    </div>
+    </body>
+
+    <script type="text/javascript">
+        gadgets.HubSettings.onConnect = function () {
+            finesse.modules.TropoGadget.init();
+        };
+    </script>
+]]>
+</Content>
+</Module>

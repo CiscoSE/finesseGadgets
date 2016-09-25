@@ -315,7 +315,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 	    	if (num.length == 11){
 	    		num = accessCode+num;
 	    	};
-			historyTable += "<tr><td>"+ calls[i].date.toLocaleTimeString() +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall(" + num + ")\">Call Back</button></td></tr>";
+			historyTable += "<tr><td>"+ calls[i].date.toLocaleTimeString() +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall('" + num + "')\">Call Back</button></td></tr>";
 		};
 		$("#history tbody").html(historyTable);
 
@@ -403,9 +403,13 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    		break;
 		    		case "OUTBOUND_PREVIEW":
 		    			number = dialog.getToAddress();
-		    			direction = "Preview Out";
+		    			direction.desc = "Preview Out";
               direction.dir = "out";
 		    		break;
+            case "OUTBOUND_DIRECT_PREVIEW":
+              direction.desc = "SM";
+              direction.dir = "SM";
+            break;
 		    		case "CONSULT":
 		    			if (dialog.getToAddress() == user.getExtension()){
 		    				number = dialog.getFromAddress();

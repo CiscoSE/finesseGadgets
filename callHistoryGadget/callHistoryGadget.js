@@ -6,8 +6,7 @@
 //	You can also post issues or requests at github.
 //
 
-var start = new Date();
-start.setHours(0,0,0,0);
+var start = moment().startOf('day');
 
 // create array for tracking calls and one for tracking active dialogs
 var calls = [];
@@ -69,18 +68,12 @@ finesse.modules.callHistoryGadget = (function ($) {
 
 			// check to make sure localstorage contained calls
 			if (retrievedArray){
-				// check to make sure data isn't over a day old
-				var currentDay = start.getDate();
-				var currentMonth = start.getMonth();
-
 				// sort calls so that the oldest call is first.
 				var sortTime = sortObjectBy(retrievedArray, "date", "D");
 
-				var retrievedDate = new Date(sortTime[0].date);
-				var retrievedDay = retrievedDate.getDate();
-				var retrievedMonth = retrievedDate.getMonth();
+				var retrievedDate = moment(sortTime[0].date).startOf('day');
 
-				if ((currentMonth == retrievedMonth && currentDay > retrievedDay) || (currentMonth > retrievedMonth && currentDay < retrievedDay)){
+				if (!moment(start).isSame(retrievedDate)){
 					clientLogs.log("Purging old data!");
 					// Purge cached data
 					localStorage.removeItem(user.getId() + "_calls");
@@ -89,16 +82,16 @@ finesse.modules.callHistoryGadget = (function ($) {
 				}else{
 					//creating date objects for cached data
 					for(var i = 0; i < retrievedArray.length; i++) {
-			    		retrievedArray[i].date = new Date(retrievedArray[i].date);
-					};
+			    		retrievedArray[i].date = moment(retrievedArray[i].date);
+					}
 					clientLogs.log("Using cached data");
 					// Write cached calls to local array
 					calls = retrievedArray;
 					// Tally Existing Calls
 					tallyCalls();
-				};
-			}; // end if retreived Array
-		}; // end call length
+				}
+			} // end if retreived Array
+		} // end call length
 
 		$(document).on('click', '#date, #direction, #duration, #number, #detail', function() {
 			if(sortMethod == $(this).attr("id") && sortDir == "A"){
@@ -118,9 +111,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 
 		// Loads call history on startup
 	    loadHistory(user.getId());
-
-        var currentState = user.getState();
-        gadgets.window.adjustHeight('680');
+      gadgets.window.adjustHeight('680');
     },
 
     tallyCalls = function (){
@@ -137,21 +128,22 @@ finesse.modules.callHistoryGadget = (function ($) {
 
     recordCall = function (agent, number, direction, counters, detail){
     	// capture the time difference in seconds
-    	var seconds = timeDiff(counters.startTime, counters.stateChangeTime);
+      var seconds = moment(counters.stateChangeTime).diff(counters.startTime, 'seconds');
+
     	// format the seconds in a format for display
     	var duration = displayTime(seconds);
+
     	// number validation
     	if (number.length == 10){
     		number = "1"+number;
     	}else if(number.length == 12 && number[0] == accessCode){
     		// remove access code
     		number = number.slice(1);
-    	};
+    	}
 
-		var callDate = new Date(counters.startTime);
-		var myCall = new Object();
-
-		myCall.date = callDate;
+		var myCall = {};
+		myCall.date = counters.startTime;
+    clientLogs.log("call date "+ myCall.date);
 		myCall.agent = agent;
 		myCall.number = number;
 		myCall.direction = direction.desc;
@@ -166,89 +158,78 @@ finesse.modules.callHistoryGadget = (function ($) {
 		}else if(direction.dir == "out"){
 			callCounter.outbound.count++;
 			callCounter.outbound.duration += seconds;
-		};
+		}
 
 		// Add call information to the calls array
 		clientLogs.log("Call added to local array");
 		calls.push(myCall);
+    clientLogs.log("calls for agent: "+ agent + " calls array: ");
+    console.log("call history", calls);
 		sortBy(sortMethod, sortDir);
 
 		// Save to localstorage as well
 		localStorage.setItem(agent + "_calls", JSON.stringify(calls));
-
-
-		//calculate call duration
-		function timeDiff(start, stop){
-			var a = new Date(start);
-			var b = new Date(stop);
-			var duration = "";
-
-			// calculate call in seconds
-			var seconds = Math.floor((b - a) / 1000);
-
-			return seconds;
-		}
 
 		// load call history with the latest call
 		loadHistory(agent);
 	},
 
 	displayTime = function (seconds){
+    var duration, minDisplay, secDisplay, hourDisplay, minutes, sec;
 		if(seconds <= 9){
-			var duration = "00:00:0"+seconds;
+			duration = "00:00:0"+seconds;
 		}else{
-			var duration = "00:00:" + seconds;
-		};
+			duration = "00:00:" + seconds;
+		}
 
 		// calculate call in minutes
 		if (seconds > 60){
-			var minutes = Math.floor(seconds / 60);
+			minutes = Math.floor(seconds / 60);
 			// check to for single digits. If a single digit prepend a 0
 			if(minutes <= 9){
-				var minDisplay = "0"+minutes;
+				minDisplay = "0"+minutes;
 			}else{
-				var minDisplay = minutes;
-			};
-
-			var sec = Math.floor(seconds - (minutes * 60));
-			// check to for single digits. If a single digit prepend a 0
-			if(sec <= 9){
-				var secDisplay = "0"+sec;
-			}else{
-				var secDisplay = sec;
+				minDisplay = minutes;
 			}
 
+			sec = Math.floor(seconds - (minutes * 60));
+			// check to for single digits. If a single digit prepend a 0
+			if(sec <= 9){
+				secDisplay = "0"+sec;
+			}else{
+				secDisplay = sec;
+			}
 			duration = "00:"+minDisplay+":"+secDisplay;
-		};
+		}
 
 		// calculate call in hours & minutes
 		if (minutes !== "" && minutes > 60){
 			var hours = Math.floor(minutes / 60);
 			// check to for single digits. If a single digit prepend a 0
 			if(hours <= 9){
-				var hourDisplay = "0"+hours;
+				hourDisplay = "0"+hours;
 			}else{
-				var hourDisplay = hours;
-			};
+				hourDisplay = hours;
+			}
 
 			minutes = Math.floor(minutes - (hours * 60));
 			// check to for single digits. If a single digit prepend a 0
 			if(minutes <= 9){
-				var minDisplay = "0"+minutes;
+				minDisplay = "0"+minutes;
 			}else{
-				var minDisplay = minutes;
-			};
+				minDisplay = minutes;
+			}
 
 			seconds = Math.floor(seconds - (hours * 60 + (minutes)) * 60);
 			// check to for single digits. If a single digit prepend a 0
 			if(sec <= 9){
-				var secDisplay = "0"+sec;
+				secDisplay = "0"+sec;
 			}else{
-				var secDisplay = sec;
+				secDisplay = sec;
 			}
 
 			duration = hourDisplay+":"+minDisplay+":"+secDisplay;
-		};
+		}
 
 		return duration;
 	},
@@ -301,22 +282,23 @@ finesse.modules.callHistoryGadget = (function ($) {
 
 		//var myAgentId = user.getId();
 		var historyTable = "";
+    var detail;
 
 		// Call history is pulled from the calls array. This is created when finesse loads
 		for (var i in calls){
 			if(calls[i].detail){
-				var detail = calls[i].detail;
+				detail = calls[i].detail;
 			}else{
-				var detail = "N/A";
+				detail = "N/A";
 			}
 
 			// Prepend Access Code on 11 digit numbers
 			var num = calls[i].number;
 	    	if (num.length == 11){
 	    		num = accessCode+num;
-	    	};
-			historyTable += "<tr><td>"+ calls[i].date.toLocaleTimeString() +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall('" + num + "')\">Call Back</button></td></tr>";
-		};
+	    	}
+			historyTable += "<tr><td>"+ moment(calls[i].date).format('LT') +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall('" + num + "')\">Call Back</button></td></tr>";
+		}
 		$("#history tbody").html(historyTable);
 
 	},
@@ -325,8 +307,8 @@ finesse.modules.callHistoryGadget = (function ($) {
     		if(trackDialog[i].id == dialog._id) {
         		trackDialog[i].to = dialog.getToAddress();
        	 		break;
-    		};
-		};
+    		}
+		}
 	},
 
 		_processCall = function (dialog) {
@@ -338,7 +320,7 @@ finesse.modules.callHistoryGadget = (function ($) {
      */
      handleNewDialog = function(dialog) {
 			// Capture important details about the current call dialog
-     	var currentCall = new Object();
+     	var currentCall = {};
      	currentCall.id = dialog._id;
      	currentCall.type = dialog.getMediaProperties().callType;
      	currentCall.to = dialog.getToAddress();
@@ -370,7 +352,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 			if(trackDialog.length < 1){
 				clientLogs.log("Loading Track Dialog from localStorage");
 				trackDialog = JSON.parse(localStorage.getItem(user.getId() + "_trackDialog"));
-			};
+			}
 
 		// determine call direction
 		for (var i = 0; i < trackDialog.length; i++){
@@ -401,11 +383,11 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    			direction.desc = "Outbound";
               direction.dir = "out";
 		    		break;
-		    		case "OUTBOUND_PREVIEW":
-		    			number = dialog.getToAddress();
-		    			direction.desc = "Preview Out";
+            case "OUTBOUND_PREVIEW":
+              number = dialog.getToAddress();
+              direction.desc = "Preview Out";
               direction.dir = "out";
-		    		break;
+            break;
             case "OUTBOUND_DIRECT_PREVIEW":
               direction.desc = "SM";
               direction.dir = "SM";
@@ -419,7 +401,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    				number = dialog.getToAddress();
 		    				direction.desc = "Consult To";
                 direction.dir = "out";
-		    			};
+		    			}
 		    		break;
             case "CONFERENCE":
               number = dialog.getFromAddress();
@@ -435,9 +417,9 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    			number = dialog.getFromAddress();
 		    			direction.desc = "n/a";
               direction.dir = "n/a";
-				};
-			};
-		};
+				}
+			}
+		}
 
     clientLogs.log("Classified calls as: "+ JSON.stringify(direction));
 
@@ -453,14 +435,14 @@ finesse.modules.callHistoryGadget = (function ($) {
 				// remove call from trackDiaglog in memory and localstorage
 				trackDialog.splice(i, 1);
 				localStorage.removeItem(user.getId() + "_trackDialog");
-    		};
-		};
+    		}
+		}
 
 		// Set agent ready if required
 		if (wasReady === true){
 			user.setState("READY");
 			wasReady = false;
-		};
+		}
     },
 
     /**
@@ -519,7 +501,7 @@ finesse.modules.callHistoryGadget = (function ($) {
 	     	if ( currentState == "READY" ) {
 	          user.setState(states.NOT_READY, reasonID);
 	          wasReady = true;
-	      	};
+	      	}
 
         	user.makeCall(number, {
 				success: makeCallSuccess,

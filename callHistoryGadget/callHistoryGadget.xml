@@ -23,6 +23,9 @@
     <!-- jQuery 1.5 -->
     <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
 
+    <!-- moment.min.js -->
+    <script type="text/javascript" src="moment.min.js"></script>
+    
     <!-- Finesse Library -->
     <script type="text/javascript" src="finesse-10.5.1.js"></script>
 
@@ -30,14 +33,9 @@
     <script type="text/javascript" src="callHistoryConfig.js"></script>
     <script type="text/javascript" src="callHistoryGadget.js"></script>
 
-    <body class="claro">
+    <body>
 
     <!-- callHistory gadget -->
-     <div class="row">
-        <div class="col-md-6">
-          <!-- <h4>Today's Call History</h4>
-          <span><p style="display: inline-block;">In: </p><p id="incoming" style="display: inline-block;"></p> <br/><p style="display: inline-block;">Out: </p><p id="outgoing" style="display: inline-block;"></p></span> -->
-
         <table class="table table-striped" id="tally">
             <thead>
                 <tr>
@@ -64,9 +62,6 @@
             <tbody>
             </tbody>
         </table>
-        <div id="mode"></div>
-        </div><!-- end column -->
-      </div> <!-- end row class -->
     </body>
     <script type="text/javascript">
     gadgets.HubSettings.onConnect = function () {

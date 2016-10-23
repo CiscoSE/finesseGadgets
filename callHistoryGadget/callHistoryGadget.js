@@ -363,6 +363,16 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    			direction.desc = "Inbound";
               direction.dir = "in";
 		    		break;
+            case "PREROUTE_ACD_IN":
+              number = dialog.getFromAddress();
+              direction.desc = "Inbound";
+              direction.dir = "in";
+            break;
+            case "PREROUTE_DIRECT_AGENT":
+              number = dialog.getFromAddress();
+              direction.desc = "Inbound";
+              direction.dir = "in";
+            break;
 		    		case "TRANSFER":
 		    			number = dialog.getFromAddress();
 		    			direction.desc = "Transfer In";
@@ -378,6 +388,11 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    			direction.desc = "Outbound";
               direction.dir = "out";
 		    		break;
+            case "AGENT_INSIDE":
+              number = dialog.getToAddress();
+              direction.desc = "Outbound";
+              direction.dir = "out";
+            break;
 		    		case "OUTBOUND":
 		    			number = dialog.getToAddress();
 		    			direction.desc = "Outbound";

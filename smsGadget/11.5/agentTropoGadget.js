@@ -9,8 +9,17 @@
 ////////////////////////////
 ///// API Keys Go Here /////
 ///////////////////////////
-var firebaseKey = "";	// Enter your Firebase secret here
-var tropoToken = "";	// Enter your Tropo messaging API Key
+var email = ""; // defined via firebase authentication console
+var password = ""; // defined via firebase authentication console
+var tropoToken = ""; // Enter your Tropo messaging API Key
+
+// firebase config values are found in the firebase web console.
+var fireBaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  storageBucket: ""
+};
 
 // If set to false, SMS will not be attempted.
 var isValid = true;
@@ -89,12 +98,11 @@ finesse.modules.TropoGadget = (function ($) {
 		          // update message history
 		          msgHistory(to);
             }else{
-              $("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">There was an error sending your message. Check the number and try again.</div>")
-            };
-
+              $("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">There was an error sending your message. Check the number and try again.</div>");
+            }
           }
         });
-    };
+    }
   },
 
   msgHistory = function (to){
@@ -106,10 +114,10 @@ finesse.modules.TropoGadget = (function ($) {
     if (snapshot.exists()) {
       $.each(snapshot.val(), function(index, value) {
         var dateSent = new Date(value.dateSent);
-        var dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDate()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
+        dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDate()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
         historyTable += "<tr><td>"+ dateSent +"</td><td>"+value.agent+"</td><td>" + value.msg + "</td></tr>";
       }); 
-    } ;
+    }
 
     $("#history tbody").html(historyTable); 
     gadgets.window.adjustHeight();
@@ -124,7 +132,7 @@ finesse.modules.TropoGadget = (function ($) {
 	        	isValid = false;
 	        	$("#msgCenter").append("<div class=\"alert alert-danger alert-dismissible\" role=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>Please Enter a valid Mobile Number</div>");
 	        	return;
-	        };
+	        }
 
 	    	// if the number is valid the msgCenter alerts are cleared	        
        $('#msgCenter').empty();
@@ -160,14 +168,14 @@ finesse.modules.TropoGadget = (function ($) {
        break;
        default:
        direction = "inbound";
-     };
+     }
 
 		// set number based off the direction of the call
    if (direction === "inbound"){
     number = dialog.getFromAddress();
   }else{
     number = dialog.getMediaProperties().dialedNumber;
-  };
+  }
 
   var callVars = dialog.getMediaProperties();
   validate(number);    
@@ -234,14 +242,16 @@ _processCall = function (dialog) {
 			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
 			// Initialize Firebase
-			interactionData = new Firebase("https://your app name.firebaseio.com/"); // Enter your application URL here
-			interactionData.authWithCustomToken(firebaseKey, function(error,result) {
+      firebase.initializeApp(fireBaseConfig);
+      firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+        clientLogs.log("authenticating!");
        if (error) {
          clientLogs.log("Authentication Failed!", error);
        } else {
          clientLogs.log("Authenticated successfully");
        }
-     });
+      });
+      interactionData = firebase.database().ref();
 
      gadgets.window.adjustHeight();
 

@@ -9,8 +9,16 @@
 ////////////////////////////
 ///// API Keys Go Here /////
 ///////////////////////////
-var firebaseKey = ""; // Enter your Firebase secret
+var email = ""; // defined via firebase authentication console
+var password = ""; // defined via firebase authentication console
 
+// firebase config values are found in the firebase web console.
+var fireBaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  storageBucket: ""
+};
 
 var finesse = finesse || {};
 finesse.gadget = finesse.gadget || {};
@@ -27,13 +35,13 @@ finesse.modules.TropoGadget = (function ($) {
       // build list of the supervisor's teams
       var myTeams = user.getSupervisedTeams();
       var teamArray = [];
-  	  $.each(myTeams, function (i, item) {
-  		  teamArray.push(item.id);
-  	    $('#team').append($('<option>', { 
-  	        value: item.id,
-  	        text : item.name 
-  	    }));
-  	  });
+      $.each(myTeams, function (i, item) {
+        teamArray.push(item.id);
+        $('#team').append($('<option>', { 
+            value: item.id,
+            text : item.name 
+        }));
+      });
       
       // setup empty variables for search
       var qTeam = "";
@@ -50,7 +58,7 @@ finesse.modules.TropoGadget = (function ($) {
           queryString += "value.team === qTeam";
         }else{
           var myTeam = "";
-          var teamsArray = user.getSupervisedTeams()
+          var teamsArray = user.getSupervisedTeams();
           var i = teamsArray.length;
           for (t = 0; t < i; t++){
             if (t == 1 && i > 1){
@@ -59,23 +67,23 @@ finesse.modules.TropoGadget = (function ($) {
               queryString += "value.team === \"" + teamsArray[t].id + "\" || ";
             }else{
               queryString += "value.team === \"" + teamsArray[t].id + "\"";
-            };
-          };
-        };
+            }
+          }
+        }
 
         if(qAgent){
           if (queryString.length > 1){
             queryString += " && ";
           }
           queryString += "value.agent === qAgent";
-        };
+        }
 
         if(qNumber){
           if (queryString.length > 1){
             queryString += " && ";
           }
           queryString += "value.to === qNumber";
-        };
+        }
 
         if(qMsg){
           if (queryString.length > 1){
@@ -84,7 +92,7 @@ finesse.modules.TropoGadget = (function ($) {
           // convert message text to lowercase for searching
           qMsg = qMsg.toLowerCase();
           queryString += "(value.msg.toLowerCase().indexOf(qMsg) > -1)";
-        };
+        }
 
         interactionData.limitToLast(1000).once('value', function(snapshot) {
         
@@ -92,26 +100,26 @@ finesse.modules.TropoGadget = (function ($) {
             $.each(snapshot.val(), function(index, value) {
               if(eval(queryString)){
                 showResults(value);
-              };
+              }
 
             }); 
-          };
+          }
               function showResults(value){
                 var dateSent = new Date(value.dateSent);
-                var dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDate()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
+                dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDate()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
                 historyTable += "<tr><td>" + dateSent + "</td><td>"+value.teamName+"</td><td>"+value.agent+"</td><td>"+value.to+"</td><td>"+value.msg+"</td></tr>";
-              };
+              }
 
           $("#history tbody").html(historyTable); 
           gadgets.window.adjustHeight();
         });
-      };
+      }
 
         msgHistory(qTeam, qAgent, qNumber, qMsg);
 
 
         $("#search").click(function(event){
-          event.preventDefault;
+          event.preventDefault();
 
           qTeam = $("#team").val();
           qAgent = $("#agent").val();
@@ -123,7 +131,7 @@ finesse.modules.TropoGadget = (function ($) {
         });
 
         $("#reset").click(function(event){
-          event.preventDefault;
+          event.preventDefault();
           $("#team").prop('selectedIndex',0);
           $("#agent").val("");
           $("#msgNumber").val("");   
@@ -139,51 +147,53 @@ finesse.modules.TropoGadget = (function ($) {
     handleUserLoad = function (userevent) {
       render();
     };
-	    
-	/** @scope finesse.modules.supTropoGadget */
-	return {
-	        
-	    /**
-	     * Performs all initialization for this gadget
-	     */
-	    init : function () {
-			var cfg = finesse.gadget.Config;
-			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
+      
+  /** @scope finesse.modules.supTropoGadget */
+  return {
+          
+      /**
+       * Performs all initialization for this gadget
+       */
+      init : function () {
+      var cfg = finesse.gadget.Config;
+      var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
       // Initialize Firebase
-      interactionData = new Firebase("https://your app name.firebaseio.com/"); // Enter your application URL here
-      interactionData.authWithCustomToken(firebaseKey, function(error,result) {
-          if (error) {
-            clientLogs.log("Authentication Failed!", error);
-          } else {
-            clientLogs.log("Authenticated successfully");
-          }
+      firebase.initializeApp(fireBaseConfig);
+      firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+        clientLogs.log("authenticating!");
+       if (error) {
+         clientLogs.log("Authentication Failed!", error);
+       } else {
+         clientLogs.log("Authenticated successfully");
+       }
       });
+      interactionData = firebase.database().ref();
 
-	    gadgets.window.adjustHeight();
-	        
+      gadgets.window.adjustHeight();
+          
       // Initiate the ClientServices and load the user object.  ClientServices are
       // initialized with a reference to the current configuration.
       finesse.clientservices.ClientServices.init(finesse.gadget.Config);
-			clientLogs.init(gadgets.Hub, "supTropoGadget"); //this gadget id will be logged as a part of the message
-	       user = new finesse.restservices.User({
-				id: cfg.id, 
+      clientLogs.init(gadgets.Hub, "supTropoGadget"); //this gadget id will be logged as a part of the message
+         user = new finesse.restservices.User({
+        id: cfg.id, 
                 onLoad : handleUserLoad
             });
-			
-			// Initiate the ContainerServices and add a handler for when the tab is visible
-			// to adjust the height of this gadget in case the tab was not visible
-			// when the html was rendered (adjustHeight only works when tab is visible)
-			
-			containerServices = finesse.containerservices.ContainerServices.init();
+      
+      // Initiate the ContainerServices and add a handler for when the tab is visible
+      // to adjust the height of this gadget in case the tab was not visible
+      // when the html was rendered (adjustHeight only works when tab is visible)
+      
+      containerServices = finesse.containerservices.ContainerServices.init();
             containerServices.addHandler(finesse.containerservices.ContainerServices.Topics.ACTIVE_TAB, function(){
-			    clientLogs.log("Supervisor SMS Gadget is now visible");  // log to Finesse logger
-			   // automatically adjust the height of the gadget to show the html
-		         gadgets.window.adjustHeight();
-				
-				   
-			   });
+          clientLogs.log("Supervisor SMS Gadget is now visible");  // log to Finesse logger
+         // automatically adjust the height of the gadget to show the html
+             gadgets.window.adjustHeight();
+        
+           
+         });
             containerServices.makeActiveTabReq();
-	    }
+      }
     };
 }(jQuery));

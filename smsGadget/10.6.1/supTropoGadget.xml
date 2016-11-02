@@ -24,14 +24,14 @@
     <!-- Finesse Library -->
     <script type="text/javascript" src="/desktop/assets/js/finesse.js"></script>
 
+    <!-- Firebase Library -->
+    <script type="text/javascript" src="firebase3_5_2.js"></script>
+
     <!-- Gadget Business Logic -->
     <script type="text/javascript" src="supTropoGadget.js"></script>
 
     <!-- Bootstrap Library -->
     <script type="text/javascript" src="bootstrap.min.js"></script>
-
-    <!-- Firebase Library -->
-    <script src="http://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
 
       <body class="claro">
         <br/>

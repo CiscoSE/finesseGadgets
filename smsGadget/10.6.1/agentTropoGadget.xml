@@ -18,20 +18,20 @@
     <link rel="stylesheet" href="TropoGadget.css" type="text/css" />
     <link rel="stylesheet" href="bootstrap.min.css" type="text/css" />
 
-    <!-- jQuery 1.5 -->
-    <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
+    <!-- jQuery -->
+    <script type="text/javascript" src="/desktop/assets/js/jquery.min.js"></script>
    
     <!-- Finesse Library -->
-    <script type="text/javascript" src="finesse-10.5.1.js"></script>
+    <script type="text/javascript" src="/desktop/assets/js/finesse.js"></script>
+
+    <!-- Firebase Library -->
+    <script type="text/javascript" src="firebase3_5_2.js"></script>
 
     <!-- Gadget Business Logic -->
     <script type="text/javascript" src="agentTropoGadget.js"></script>
 
     <!-- Bootstrap Library -->
     <script type="text/javascript" src="bootstrap.min.js"></script>
-
-    <!-- Firebase Library -->
-    <script src="http://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
 
       <body class="claro">
         <br/>
@@ -66,7 +66,7 @@
                 <select id="template" name="template" class="form-control">
                   <option value="" disabled selected>Select a Template</option>
                   <option value="Your order has shipped.">Your order has shipped.</option>
-                  <option value="Thank you for calling Cisco TAC. You Service Request number is: **insert** for your records.">Thank you for calling Cisco TAC.</options>
+                  <option value="Thank you for calling Cisco TAC. You Service Request number is: **insert** for your records.">Thank you for calling Cisco TAC.</option>
                   <option value="Thanks for calling Cisco. Use the following coupon code on your next order: CISCO123">Thanks for calling Cisco. Use the following coupon code on your next order: CISCO123</option>
                 </select>
               </div>
@@ -98,7 +98,7 @@
         </div><!-- end column -->
       </div> <!-- end row class -->
       <div class="row">
-        <div align="center"><img src="<insert path to gadget directory>/troposms/poweredbycisco.png"></div> // update with path to gadget directory      
+        <div align="center"><img src="poweredbycisco.png"></div> <!-- update with path to gadget directory -->  
       </div>
     </body>
 

@@ -9,8 +9,16 @@
 ////////////////////////////
 ///// API Keys Go Here /////
 ///////////////////////////
-var firebaseKey = ""; // Enter your Firebase secret
+var email = ""; // defined via firebase authentication console
+var password = ""; // defined via firebase authentication console
 
+// firebase config values are found in the firebase web console.
+var fireBaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  storageBucket: ""
+};
 
 var finesse = finesse || {};
 finesse.gadget = finesse.gadget || {};
@@ -76,7 +84,7 @@ finesse.modules.TropoGadget = (function ($) {
           queryString += "value.team === qTeam";
         }else{
           var myTeam = "";
-          var teamsArray = user.getSupervisedTeams()
+          var teamsArray = user.getSupervisedTeams();
           var i = teamsArray.length;
           for (t = 0; t < i; t++){
             if (t == 1 && i > 1){
@@ -85,23 +93,23 @@ finesse.modules.TropoGadget = (function ($) {
               queryString += "value.team === \"" + teamsArray[t].id + "\" || ";
             }else{
               queryString += "value.team === \"" + teamsArray[t].id + "\"";
-            };
-          };
-        };
+            }
+          }
+        }
 
         if(qAgent){
           if (queryString.length > 1){
             queryString += " && ";
           }
           queryString += "value.agent === qAgent";
-        };
+        }
 
         if(qNumber){
           if (queryString.length > 1){
             queryString += " && ";
           }
           queryString += "value.to === qNumber";
-        };
+        }
 
         if(qMsg){
           if (queryString.length > 1){
@@ -110,7 +118,7 @@ finesse.modules.TropoGadget = (function ($) {
           // convert message text to lowercase for searching
           qMsg = qMsg.toLowerCase();
           queryString += "(value.msg.toLowerCase().indexOf(qMsg) > -1)";
-        };
+        }
 
         interactionData.limitToLast(1000).once('value', function(snapshot) {
         
@@ -118,26 +126,25 @@ finesse.modules.TropoGadget = (function ($) {
             $.each(snapshot.val(), function(index, value) {
               if(eval(queryString)){
                 showResults(value);
-              };
-
+              }
             }); 
-          };
+          }
               function showResults(value){
                 var dateSent = new Date(value.dateSent);
-                var dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDate()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
+                dateSent = (dateSent.getMonth()+1)+ "-" +dateSent.getDate()+"-"+dateSent.getFullYear()+ " "+ dateSent.toLocaleTimeString();
                 historyTable += "<tr><td>" + dateSent + "</td><td>"+value.teamName+"</td><td>"+value.agent+"</td><td>"+value.to+"</td><td>"+value.msg+"</td></tr>";
-              };
+              }
 
           $("#history tbody").html(historyTable); 
           gadgets.window.adjustHeight();
         });
-      };
+      }
 
         msgHistory(qTeam, qAgent, qNumber, qMsg);
 
 
         $("#search").click(function(event){
-          event.preventDefault;
+          event.preventDefault();
 
           qTeam = $("#team").val();
           qAgent = $("#agent").val();
@@ -149,7 +156,7 @@ finesse.modules.TropoGadget = (function ($) {
         });
 
         $("#reset").click(function(event){
-          event.preventDefault;
+          event.preventDefault();
           $("#team").prop('selectedIndex',0);
           $("#agent").val("");
           $("#msgNumber").val("");   
@@ -178,14 +185,16 @@ finesse.modules.TropoGadget = (function ($) {
 			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
 
       // Initialize Firebase
-      interactionData = new Firebase("https://your app name.firebaseio.com/"); // Enter your application URL here
-      interactionData.authWithCustomToken(firebaseKey, function(error,result) {
-          if (error) {
+      firebase.initializeApp(fireBaseConfig);
+      firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+        clientLogs.log("authenticating!");
+       if (error) {
          clientLogs.log("Authentication Failed!", error);
        } else {
          clientLogs.log("Authenticated successfully");
-          }
+       }
       });
+      interactionData = firebase.database().ref();
 
 	    gadgets.window.adjustHeight();
 	        

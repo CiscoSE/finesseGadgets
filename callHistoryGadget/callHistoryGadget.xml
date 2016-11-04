@@ -17,8 +17,8 @@
 <![CDATA[
 	<!DOCTYPE html>
 	<!-- Styling -->
-	<link rel="stylesheet" href="callHistoryGadget.css" type="text/css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="callHistoryGadget.css" type="text/css" />
 
     <!-- jQuery 1.5 -->
     <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
@@ -51,11 +51,11 @@
         <table class="table table-striped" id="history">
             <thead>
               <tr>
-                <th width="15%" id="date">Time</th>
-                <th width="15%" id="direction">Type</th>
-                <th width="15%" id="duration">Duration</th>
-                <th width="20%" id="number">Number</th>
-                <th width="20%" id="detail">Detail</th>
+                <th width="15%" class="sort" data-sort="date">Time</th>
+                <th width="15%" class="sort" data-sort="direction">Type</th>
+                <th width="15%" class="sort" data-sort="duration">Duration</th>
+                <th width="20%" class="sort" data-sort="number">Number</th>
+                <th width="20%" class="sort" data-sort="detail">Detail</th>
                 <th width="15%">Action</th>
               </tr>
             </thead>

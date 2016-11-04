@@ -22,3 +22,34 @@ td {
 	color: #333;
 	padding-left: 0px;
 }
+
+.sort {
+ 
+}
+.sort:hover {
+  text-decoration: none;
+  border-bottom: 2px solid grey;
+}
+
+.sort.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid black;
+  content:"";
+  position: relative;
+  top:13px;
+  right:-5px;
+}
+.sort.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid black;
+  content:"";
+  position: relative;
+  top:-10px;
+  right:-5px;
+}

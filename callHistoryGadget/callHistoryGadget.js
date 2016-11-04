@@ -20,8 +20,8 @@ var reasonID = config.reasonID;
 var wasReady = false; // This allows the gadget to move the agent back into a ready state after a callback is made.
 
 //Default Sorting order
-var sortMethod = "date";
-var sortDir = "D"; // Ascending
+var sortMethod = localStorage.getItem('sortMethod') || "date";
+var sortDir = localStorage.getItem('sortDir') || "D"; 
 
 var finesse = finesse || {};
 finesse.gadget = finesse.gadget || {};
@@ -61,56 +61,53 @@ finesse.modules.callHistoryGadget = (function ($) {
 
     render = function () {
 			clientLogs.log('Loading the following config parameters: ' + JSON.stringify(config));
-		// Load history from local storage if present
-		if (calls.length < 1){
-			// Retrieve the object from storage
-			var retrievedArray = JSON.parse(localStorage.getItem(user.getId() + "_calls"));
+      clientLogs.log('sort Method on load: '+sortMethod);
+  		
+      // Load history from local storage if present
+  		if (calls.length < 1){
+  			// Retrieve the object from storage
+  			var retrievedArray = JSON.parse(localStorage.getItem(user.getId() + "_calls"));
 
-			// check to make sure localstorage contained calls
-			if (retrievedArray){
-				// sort calls so that the oldest call is first.
-				var sortTime = sortObjectBy(retrievedArray, "date", "D");
+  			// check to make sure localstorage contained calls
+  			if (retrievedArray){
+  				// sort calls so that the oldest call is first.
+          var sortTime;
+  				sortObjectBy(retrievedArray, "date", "D")
+          .then(function(calls){
+            clientLogs.log('time sort: '+ calls);
+            sortTime = calls;
+          });
 
-				var retrievedDate = moment(sortTime[0].date).startOf('day');
+  				var retrievedDate = moment(sortTime[0].date).startOf('day');
 
-				if (!moment(start).isSame(retrievedDate)){
-					clientLogs.log("Purging old data!");
-					// Purge cached data
-					localStorage.removeItem(user.getId() + "_calls");
-					localStorage.removeItem(user.getId() + "_trackDialog");
-					calls = [];
-				}else{
-					//creating date objects for cached data
-					for(var i = 0; i < retrievedArray.length; i++) {
-			    		retrievedArray[i].date = moment(retrievedArray[i].date);
-					}
-					clientLogs.log("Using cached data");
-					// Write cached calls to local array
-					calls = retrievedArray;
-					// Tally Existing Calls
-					tallyCalls();
-				}
-			} // end if retreived Array
-		} // end call length
+  				if (!moment(start).isSame(retrievedDate)){
+  					clientLogs.log("Purging old data!");
+  					// Purge cached data
+  					localStorage.removeItem(user.getId() + "_calls");
+  					localStorage.removeItem(user.getId() + "_trackDialog");
+  					calls = [];
+  				}else{
+  					//creating date objects for cached data
+  					for(var i = 0; i < retrievedArray.length; i++) {
+  			    		retrievedArray[i].date = moment(retrievedArray[i].date);
+  					}
+  					clientLogs.log("Using cached data");
+  					// Write cached calls to local array
+  					calls = retrievedArray;
+  					// Tally Existing Calls
+            clientLogs.log(calls);
+  					tallyCalls();
+  				}
+  			} // end if retreived Array
+  		} // end call length
 
-		$(document).on('click', '#date, #direction, #duration, #number, #detail', function() {
-			if(sortMethod == $(this).attr("id") && sortDir == "A"){
-				sortBy($(this).attr("id"), "D");
-				sortDir = "D";
-			}else if (sortMethod == $(this).attr("id") && sortDir == "D"){
-				sortBy($(this).attr("id"), "A");
-				sortDir = "A";
-			}else{
-				sortBy($(this).attr("id"), "A");
-				sortMethod = $(this).attr("id");
-				sortDir = "A";
-			}
-			// Update calls in local storage
-			localStorage.setItem(user.getId() + "_calls", JSON.stringify(calls));
-		});
-
-		// Loads call history on startup
-	    loadHistory(user.getId());
+		  // Loads call history on startup
+      sortObjectBy(calls,sortMethod,sortDir)
+      .then(function(sortedCalls){
+        calls = sortedCalls;
+        clientLogs.log('my calls: '+calls);
+        loadHistory(user.getId());
+      });
       gadgets.window.adjustHeight('680');
     },
 
@@ -143,7 +140,6 @@ finesse.modules.callHistoryGadget = (function ($) {
 
 		var myCall = {};
 		myCall.date = counters.startTime;
-    clientLogs.log("call date "+ myCall.date);
 		myCall.agent = agent;
 		myCall.number = number;
 		myCall.direction = direction.desc;
@@ -160,18 +156,14 @@ finesse.modules.callHistoryGadget = (function ($) {
 			callCounter.outbound.duration += seconds;
 		}
 
+    // Save to localstorage as well
+    localStorage.setItem(agent + "_calls", JSON.stringify(calls));
+
 		// Add call information to the calls array
 		clientLogs.log("Call added to local array");
+    // Convert date to moment object
+    myCall.date = moment(myCall.date);
 		calls.push(myCall);
-    clientLogs.log("calls for agent: "+ agent + " calls array: ");
-    console.log("call history", calls);
-		sortBy(sortMethod, sortDir);
-
-		// Save to localstorage as well
-		localStorage.setItem(agent + "_calls", JSON.stringify(calls));
-
-		// load call history with the latest call
-		loadHistory(agent);
 	},
 
 	displayTime = function (seconds){
@@ -235,40 +227,36 @@ finesse.modules.callHistoryGadget = (function ($) {
 	},
 
 	sortObjectBy = function(array, srtKey, srtOrder){
-	    if (srtOrder =="A"){
-	        if (srtKey == "direction" || srtKey == "number"){
-	            return array.sort(function (a, b) {
-	                var x = a[srtKey].toLowerCase(); var y = b[srtKey].toLowerCase();
-	                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-	            });
-	        }else{
-	        return array.sort(function (a, b) {
-	            var x = a[srtKey]; var y = b[srtKey];
-	            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-	        });
+    console.log(array);
+    var _def = $.Deferred();
+    var sorted;
+    if (srtOrder =="A"){
+      if (srtKey == "direction" || srtKey == "number"){
+        sorted = array.sort(function (a, b) {
+          var x = a[srtKey].toLowerCase(); var y = b[srtKey].toLowerCase();
+          return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
+      }else{
+        sorted = array.sort(function (a, b) {
+          var x = a[srtKey]; var y = b[srtKey];
+          return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
+      }
+    }else if(srtOrder =="D"){
+      if (srtKey =="type" || srtKey =="number"){
+        sorted = array.sort(function (a, b) {
+          var x = a[srtKey].toLowerCase(); var y = b[srtKey].toLowerCase();
+          return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        });
+      }else{
+        sorted = array.sort(function (a, b) {
+          var x = a[srtKey]; var y = b[srtKey];
+          return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        });
+      }
+    }
 
-	        }
-	    }
-
-	    if (srtOrder =="D"){
-	        if (srtKey =="type" || srtKey =="number"){
-	            return array.sort(function (a, b) {
-	                var x = a[srtKey].toLowerCase(); var y = b[srtKey].toLowerCase();
-	                return ((x > y) ? -1 : ((x < y) ? 1 : 0));
-	            });
-	        }else{
-				return array.sort(function (a, b) {
-	            var x = a[srtKey]; var y = b[srtKey];
-	            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
-	        });
-
-	        }
-	    }
-	},
-
-	sortBy = function (srtValue, srtOrder){
-		calls = sortObjectBy(calls,srtValue,srtOrder);
-		loadHistory(user.getId());
+    return _def.resolve(sorted);
 	},
 
 	loadHistory = function (agent) {
@@ -297,65 +285,76 @@ finesse.modules.callHistoryGadget = (function ($) {
 	    	if (num.length == 11){
 	    		num = accessCode+num;
 	    	}
-			historyTable += "<tr><td>"+ moment(calls[i].date).format('LT') +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall('" + num + "')\">Call Back</button></td></tr>";
+			historyTable += "<tr><td>"+ moment(calls[i].date).format('LTS') +"</td><td>" + calls[i].direction +"</td><td>"+ calls[i].duration +"</td><td>"+ calls[i].number +"</td><td>"+ detail +"</td><td><button onClick=\"finesse.modules.callHistoryGadget.makeCall('" + num + "')\">Call Back</button></td></tr>";
 		}
 		$("#history tbody").html(historyTable);
+
+    // apply sort identifier
+    if(sortDir === "D"){
+      $('.sort[data-sort="'+sortMethod+'"]').addClass('desc');
+    }else{
+      $('.sort[data-sort="'+sortMethod+'"]').addClass('asc');
+    }
 
 	},
 	displayCall = function (dialog){
 		for(var i = 0; i < trackDialog.length; i++) {
-    		if(trackDialog[i].id == dialog._id) {
-        		trackDialog[i].to = dialog.getToAddress();
-       	 		break;
-    		}
+  		if(trackDialog[i].id == dialog._id) {
+    		trackDialog[i].to = dialog.getToAddress();
+   	 		break;
+  		}
 		}
 	},
 
 		_processCall = function (dialog) {
 			displayCall (dialog);
 	},
-    /**
-     *  Handler for additions to the Dialogs collection object.  This will occur when a new
-     *  Dialog is created on the Finesse server for this user.
-     */
-     handleNewDialog = function(dialog) {
-			// Capture important details about the current call dialog
-     	var currentCall = {};
-     	currentCall.id = dialog._id;
-     	currentCall.type = dialog.getMediaProperties().callType;
-     	currentCall.to = dialog.getToAddress();
-     	currentCall.from = dialog.getFromAddress();
-     	currentCall.counters = dialog.getParticipantTimerCounters(user.getExtension());
-			// Store this call information in the trackDiaglog array each new dialog update clear the dialog info.
-     	trackDialog.push(currentCall);
-			//Write the trackDiaglog to localStorage. this will be reloaded if the browser is closed or refreshed
-			localStorage.setItem(user.getId() + "_trackDialog", JSON.stringify(trackDialog));
-     	clientLogs.log("New call arrived");
 
-     	 // add a dialog change handler in case the callvars didn't arrive yet
-		 dialog.addHandler('change', _processCall);
+  /**
+   *  Handler for additions to the Dialogs collection object.  This will occur when a new
+   *  Dialog is created on the Finesse server for this user.
+   */
+  handleNewDialog = function(dialog) {
+    // Capture important details about the current call dialog
+    var currentCall = {};
+    currentCall.id = dialog._id;
+    currentCall.type = dialog.getMediaProperties().callType;
+    currentCall.to = dialog.getToAddress();
+    currentCall.from = dialog.getFromAddress();
+    currentCall.counters = dialog.getParticipantTimerCounters(user.getExtension());
 
-	     // call the displayCall handler
-		 displayCall (dialog);
-    },
+    // Store this call information in the trackDiaglog array each new dialog update clear the dialog info.
+    trackDialog.push(currentCall);
 
-    /**
-     *  Handler for deletions from the Dialogs collection object for this user.  This will occur
-     *  when a Dialog is removed from this user's collection (example, end call)
-     */
-    handleEndDialog = function(dialog) {
-			clientLogs.log("Handling End Dialog");
-    	var number = "";
-    	var direction = {};
+    //Write the trackDiaglog to localStorage. this will be reloaded if the browser is closed or refreshed
+    localStorage.setItem(user.getId() + "_trackDialog", JSON.stringify(trackDialog));
+    clientLogs.log("New call arrived");
 
-			// If the trackDialog in memory is empty, load data from localStorage
-			if(trackDialog.length < 1){
-				clientLogs.log("Loading Track Dialog from localStorage");
-				trackDialog = JSON.parse(localStorage.getItem(user.getId() + "_trackDialog"));
-			}
+    // add a dialog change handler in case the callvars didn't arrive yet
+    dialog.addHandler('change', _processCall);
+
+    // call the displayCall handler
+    displayCall (dialog);
+  },
+
+  /**
+  *  Handler for deletions from the Dialogs collection object for this user.  This will occur
+  *  when a Dialog is removed from this user's collection (example, end call)
+  */
+  handleEndDialog = function(dialog) {
+    clientLogs.log("Handling End Dialog");
+    var number = "";
+    var direction = {};
+    var i;
+
+    // If the trackDialog in memory is empty, load data from localStorage
+    if(trackDialog.length < 1){
+      clientLogs.log("Loading Track Dialog from localStorage");
+      trackDialog = JSON.parse(localStorage.getItem(user.getId() + "_trackDialog"));
+    }
 
 		// determine call direction
-		for (var i = 0; i < trackDialog.length; i++){
+		for (i = 0; i < trackDialog.length; i++){
 			if (trackDialog[i].id == dialog._id){
 				switch(trackDialog[i].type){
 		    		case "ACD_IN":
@@ -439,18 +438,20 @@ finesse.modules.callHistoryGadget = (function ($) {
     clientLogs.log("Classified calls as: "+ JSON.stringify(direction));
 
 		// check for additional call dialogs
-		for(var i = 0; i < trackDialog.length; i++) {
+		for(i = 0; i < trackDialog.length; i++) {
 			if (direction.dir == "SM"){
 				//do not write to history
 			}else if(trackDialog[i].id == dialog._id) {
 				var callVars = dialog.getMediaProperties();
-        		trackDialog[i].counters.stateChangeTime = dialog.getParticipantTimerCounters(user.getExtension()).stateChangeTime;
-       	 		// Save Call to callHistory Gadget
+        trackDialog[i].counters.stateChangeTime = dialog.getParticipantTimerCounters(user.getExtension()).stateChangeTime;
+       	
+        // Save Call to callHistory Gadget
 				recordCall(user.getId(), number, direction, trackDialog[i].counters, callVars[config.callDetail]);
-				// remove call from trackDiaglog in memory and localstorage
+				
+        // remove call from trackDiaglog in memory and localstorage
 				trackDialog.splice(i, 1);
 				localStorage.removeItem(user.getId() + "_trackDialog");
-    		}
+    	}
 		}
 
 		// Set agent ready if required
@@ -458,41 +459,41 @@ finesse.modules.callHistoryGadget = (function ($) {
 			user.setState("READY");
 			wasReady = false;
 		}
-    },
+  },
 
-    /**
-     * Handler for makeCall when successful.
-     */
-    makeCallSuccess = function(rsp) {
-    },
+  /**
+   * Handler for makeCall when successful.
+   */
+  makeCallSuccess = function(rsp) {
+  },
 
-    /**
-     * Handler for makeCall when error occurs.
-     */
-    makeCallError = function(rsp) {
-    },
+  /**
+   * Handler for makeCall when error occurs.
+   */
+  makeCallError = function(rsp) {
+  },
 
-    /**
-     * Handler for the onLoad of a User object.  This occurs when the User object is initially read
-     * from the Finesse server.  Any once only initialization should be done within this function.
-     */
-    handleUserLoad = function (userevent) {
-        // Get an instance of the dialogs collection and register handlers for dialog additions and
-        // removals
-        dialogs = user.getDialogs( {
-        	onCollectionAdd : handleNewDialog,
-          onCollectionDelete : handleEndDialog
-        });
+  /**
+   * Handler for the onLoad of a User object.  This occurs when the User object is initially read
+   * from the Finesse server.  Any once only initialization should be done within this function.
+   */
+  handleUserLoad = function (userevent) {
+    // Get an instance of the dialogs collection and register handlers for dialog additions and
+    // removals
+    dialogs = user.getDialogs( {
+    	onCollectionAdd : handleNewDialog,
+      onCollectionDelete : handleEndDialog
+    });
 
-        render();
-    },
+    render();
+  },
 
-    /**
-     *  Handler for all User updates
-     */
-    handleUserChange = function(userevent) {
-        render();
-    };
+  /**
+   *  Handler for all User updates
+   */
+  handleUserChange = function(userevent) {
+    render();
+  };
 
 	/** @scope finesse.modules.SampleGadget */
 	return {
@@ -528,38 +529,57 @@ finesse.modules.callHistoryGadget = (function ($) {
 	     * Performs all initialization for this gadget
 	     */
 	    init : function () {
-			var prefs =  new gadgets.Prefs(),
-			id = prefs.getString("id");
-			var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
+        var prefs =  new gadgets.Prefs(),
+        id = prefs.getString("id");
+        var clientLogs = finesse.cslogger.ClientLogger;   // declare clientLogs
+        gadgets.window.adjustHeight('680');
 
-	        gadgets.window.adjustHeight('680');
+        // Initiate the ClientServices and load the user object.  ClientServices are
+        // initialized with a reference to the current configuration.
+        finesse.clientservices.ClientServices.init(finesse.gadget.Config);
+        clientLogs.init(gadgets.Hub, "Call History Gadget"); //this gadget id will be logged as a part of the message
+        user = new finesse.restservices.User({
+				  id: id,
+          onLoad : handleUserLoad,
+          onChange : handleUserChange
+        });
 
-	        // Initiate the ClientServices and load the user object.  ClientServices are
-	        // initialized with a reference to the current configuration.
-	        finesse.clientservices.ClientServices.init(finesse.gadget.Config);
-			clientLogs.init(gadgets.Hub, "Call History Gadget"); //this gadget id will be logged as a part of the message
-	        user = new finesse.restservices.User({
-				id: id,
-                onLoad : handleUserLoad,
-                onChange : handleUserChange
-            });
+        states = finesse.restservices.User.States;
 
-	        states = finesse.restservices.User.States;
+        // handle sort clicks
+        $(document).on('click', '.sort', function(e) {
+          e.preventDefault();
+          sortMethod = $(this).attr('data-sort');
+          if($(this).hasClass('desc')){
+            sortDir = "A";
+          }else if ($(this).hasClass('asc')){
+            sortDir = "D";
+          }else{
+            // $(this).addClass('desc');
+            sortDir = "D";
+          }
+          // clear current indicator
+          $('.sort').removeClass('desc');
+          $('.sort').removeClass('asc');
 
-			// Initiate the ContainerServices and add a handler for when the tab is visible
-			// to adjust the height of this gadget in case the tab was not visible
-			// when the html was rendered (adjustHeight only works when tab is visible)
+          // store sort selections in localStorage
+          localStorage.setItem('sortMethod', sortMethod);
+          localStorage.setItem('sortDir', sortDir);
 
-			containerServices = finesse.containerservices.ContainerServices.init();
-            containerServices.addHandler(finesse.containerservices.ContainerServices.Topics.ACTIVE_TAB, function(){
-			    clientLogs.log("Call History Gadget is now visible");  // log to Finesse logger
-			   // automatically adjust the height of the gadget to show the html
+          render();
+        });
 
-		         gadgets.window.adjustHeight('680');
+  			// Initiate the ContainerServices and add a handler for when the tab is visible
+  			// to adjust the height of this gadget in case the tab was not visible
+  			// when the html was rendered (adjustHeight only works when tab is visible)
 
-
-			   });
-            containerServices.makeActiveTabReq();
+  			containerServices = finesse.containerservices.ContainerServices.init();
+        containerServices.addHandler(finesse.containerservices.ContainerServices.Topics.ACTIVE_TAB, function(){
+  			 clientLogs.log("Call History Gadget is now visible");  // log to Finesse logger
+  			 // automatically adjust the height of the gadget to show the html
+          gadgets.window.adjustHeight('680');
+        });
+        containerServices.makeActiveTabReq();
 	    }
     };
 }(jQuery));

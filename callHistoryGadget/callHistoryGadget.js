@@ -130,6 +130,11 @@ finesse.modules.callHistoryGadget = (function ($) {
     	// format the seconds in a format for display
     	var duration = displayTime(seconds);
 
+      // remove + from +e164 formatted numbers
+      if(number[0] === "+"){
+        number = number.slice(1);
+      }
+
     	// number validation
     	if (number.length == 10){
     		number = "1"+number;
@@ -138,32 +143,34 @@ finesse.modules.callHistoryGadget = (function ($) {
     		number = number.slice(1);
     	}
 
-		var myCall = {};
-		myCall.date = counters.startTime;
-		myCall.agent = agent;
-		myCall.number = number;
-		myCall.direction = direction.desc;
-		myCall.seconds = seconds;
-		myCall.duration = duration;
-		myCall.detail = detail; // set to the call Variable you would like displayed in the "detail" column of the call History
+  		var myCall = {};
+  		myCall.date = counters.startTime;
+  		myCall.agent = agent;
+  		myCall.number = number;
+  		myCall.direction = direction.desc;
+  		myCall.seconds = seconds;
+  		myCall.duration = duration;
+  		myCall.detail = detail; // set to the call Variable you would like displayed in the "detail" column of the call History
 
-		// Increment call Tally and durations
-		if(direction.dir == "in"){
-			callCounter.inbound.count++;
-			callCounter.inbound.duration += seconds;
-		}else if(direction.dir == "out"){
-			callCounter.outbound.count++;
-			callCounter.outbound.duration += seconds;
-		}
+  		// Increment call Tally and durations
+  		if(direction.dir == "in"){
+  			callCounter.inbound.count++;
+  			callCounter.inbound.duration += seconds;
+  		}else if(direction.dir == "out"){
+  			callCounter.outbound.count++;
+  			callCounter.outbound.duration += seconds;
+  		}
 
-    // Save to localstorage as well
-    localStorage.setItem(agent + "_calls", JSON.stringify(calls));
+      // Add call information to the calls array
+      clientLogs.log("Call added to local array");
+      calls.push(myCall);
 
-		// Add call information to the calls array
-		clientLogs.log("Call added to local array");
-    // Convert date to moment object
-    myCall.date = moment(myCall.date);
-		calls.push(myCall);
+      // Save to localstorage as well
+      localStorage.setItem(agent + "_calls", JSON.stringify(calls));
+
+      // Convert date to moment object
+      calls[calls.length-1].date = moment(calls[calls.length-1].date);
+
 	},
 
 	displayTime = function (seconds){
@@ -299,10 +306,10 @@ finesse.modules.callHistoryGadget = (function ($) {
 	},
 	displayCall = function (dialog){
 		for(var i = 0; i < trackDialog.length; i++) {
-  		if(trackDialog[i].id == dialog._id) {
-    		trackDialog[i].to = dialog.getToAddress();
-   	 		break;
-  		}
+    		if(trackDialog[i].id == dialog._id) {
+        		trackDialog[i].to = dialog.getToAddress();
+       	 		break;
+    		}
 		}
 	},
 
@@ -551,10 +558,13 @@ finesse.modules.callHistoryGadget = (function ($) {
           e.preventDefault();
           sortMethod = $(this).attr('data-sort');
           if($(this).hasClass('desc')){
+            clientLogs.log("selected column has desc class, switch to asc");
             sortDir = "A";
           }else if ($(this).hasClass('asc')){
+            clientLogs.log("selected column has asc class, switch to desc");
             sortDir = "D";
           }else{
+            clientLogs.log("selected column has no sort class, switch to desc");
             // $(this).addClass('desc');
             sortDir = "D";
           }

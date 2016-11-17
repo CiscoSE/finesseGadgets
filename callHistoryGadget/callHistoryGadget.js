@@ -466,6 +466,8 @@ finesse.modules.callHistoryGadget = (function ($) {
 			user.setState("READY");
 			wasReady = false;
 		}
+    // load latest call info
+    render();
   },
 
   /**

@@ -1,5 +1,5 @@
 # Call History Gadget
-![](http://me.bmcallister.com/gadgetimages/callHistoryOverview.jpg)
+![](https://s3.amazonaws.com/bdm-files/screenshots/callHistoryOverview.jpg)
 
 1. Tally of the agents total inbound/outbound calls and duration for the day
 2. Data can be sorted by clicking on the table header
@@ -9,7 +9,7 @@
 Installation instructions are <a href="https://github.com/bdm1981/finesseGadgets/wiki/Call-History-Gadget-Installation-Guide">Here</a>
 
 # Cisco SMS Gadget
-![](http://me.bmcallister.com/gadgetimages/ciscoSMSGadget.jpg)
+![](https://s3.amazonaws.com/bdm-files/screenshots/ciscoSMSGadget.jpg)
 
 SMS Gadget Installation Guide is available <a href="https://github.com/bdm1981/finesseGadgets/wiki/SMS-Gadget-Installation-Guide">Here</a>
 

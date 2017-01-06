@@ -72,7 +72,7 @@ finesse.modules.callHistoryGadget = (function ($) {
   			if (retrievedArray){
   				// sort calls so that the oldest call is first.
           var sortTime;
-  				sortObjectBy(retrievedArray, "date", "D")
+  				sortObjectBy(retrievedArray, "date", "A")
           .then(function(calls){
             clientLogs.log('time sort: '+ calls);
             sortTime = calls;
@@ -390,14 +390,27 @@ finesse.modules.callHistoryGadget = (function ($) {
               direction.dir = "in";
 		    		break;
 		    		case "OUT":
-		    			number = dialog.getToAddress();
-		    			direction.desc = "Outbound";
-              direction.dir = "out";
+              // fix for initial call type on internal calls showing as "OUT"
+              if (dialog.getToAddress() == user.getExtension()){
+                number = dialog.getFromAddress();
+                direction.desc = "Inbound";
+                direction.dir = "in";
+              }else{
+                number = dialog.getToAddress();
+                direction.desc = "Outbound";
+                direction.dir = "out";
+              }
 		    		break;
             case "AGENT_INSIDE":
-              number = dialog.getToAddress();
-              direction.desc = "Outbound";
-              direction.dir = "out";
+              if (dialog.getToAddress() == user.getExtension()){
+                number = dialog.getFromAddress();
+                direction.desc = "Inbound";
+                direction.dir = "in";
+              }else{
+                number = dialog.getToAddress();
+                direction.desc = "Outbound";
+                direction.dir = "out";
+              }
             break;
 		    		case "OUTBOUND":
 		    			number = dialog.getToAddress();

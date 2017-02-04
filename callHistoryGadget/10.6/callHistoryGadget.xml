@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+
+<ModulePrefs title="Call History"
+        description="Call History"
+        thumbnail="http://localhost:8080/"
+        height="680"
+        scrolling="true">
+
+    <Require feature="settitle" />
+    <Require feature="dynamic-height" />
+    <Require feature="pubsub-2" />
+	<Require feature="setprefs" />
+</ModulePrefs>
+
+<Content type="html">
+<![CDATA[
+	<!DOCTYPE html>
+	<!-- Styling -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="callHistoryGadget.css" type="text/css" />
+    
+    <!-- Uncomment the scripts below for 10.6 and later as a 3rd party gadget -->
+    <!-- jQuery when running as a 3rd party gadget -->
+    <!-- <script type="text/javascript" src="/desktop/assets/js/jquery.min.js"></script> -->
+    <!-- Finesse Library when running as a 3rd party gadget-->
+    <!-- <script type="text/javascript" src="/desktop/assets/js/finesse.js"></script> --> 
+
+    <!-- Uncomment the scipts below for 10.6 and later and the gadget is hosted on another server -->
+    <!-- jQuery when running as a 3rd party gadget -->
+    <!-- <script type="text/javascript" src="https://<server hostname>:<port>/desktop/assets/js/jquery.min.js"></script> -->
+    <!-- Finesse Library when running as a 3rd party gadget-->
+    <!-- <script type="text/javascript" src="https://<server hostname>:<port>/desktop/assets/js/finesse.js"></script> --> 
+
+
+    <!-- moment.min.js -->
+    <script type="text/javascript" src="moment.min.js"></script>
+    
+
+    <!-- Gadget Business Logic -->
+    <script type="text/javascript" src="callHistoryConfig.js"></script>
+    <script type="text/javascript" src="callHistoryGadget.js"></script>
+
+    <body>
+
+    <!-- callHistory gadget -->
+    <!-- uncomment to enable quick dial
+        <input type="text" id="quickInput"></input>
+        <button onClick="finesse.modules.callHistoryGadget.quickDial()">Quick Dial</button>
+    -->
+    <p>
+        <table class="table table-striped" id="tally">
+            <thead>
+                <tr>
+                    <th>Call Type</th>
+                    <th>Total Calls</th>
+                    <th>Total Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <table class="table table-striped" id="history">
+            <thead>
+              <tr>
+                <th width="15%" class="sort" data-sort="date">Time</th>
+                <th width="15%" class="sort" data-sort="direction">Type</th>
+                <th width="15%" class="sort" data-sort="duration">Duration</th>
+                <th width="20%" class="sort" data-sort="number">Number</th>
+                <th width="20%" class="sort" data-sort="detail">Detail</th>
+                <th width="15%">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </body>
+    <script type="text/javascript">
+    gadgets.HubSettings.onConnect = function () {
+        finesse.modules.callHistoryGadget.init();
+    };
+
+    </script>
+]]>
+</Content>
+</Module>

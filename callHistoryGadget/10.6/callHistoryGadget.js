@@ -426,17 +426,21 @@ finesse.modules.callHistoryGadget = (function ($) {
               direction.desc = "SM";
               direction.dir = "SM";
             break;
-		    		case "CONSULT":
-		    			if (dialog.getToAddress() == user.getExtension()){
-		    				number = dialog.getFromAddress();
-		    				direction.desc = "Consult From";
+            case "CONSULT":
+              if (dialog.getToAddress() == user.getExtension()){
+                number = dialog.getFromAddress();
+                direction.desc = "Consult From";
                 direction.dir = "in";
-		    			}else{
-		    				number = dialog.getToAddress();
-		    				direction.desc = "Consult To";
+              }else if(dialog.getFromAddress() == user.getExtension()){
+                number = dialog.getToAddress();
+                direction.desc = "Consult To";
                 direction.dir = "out";
-		    			}
-		    		break;
+              }else if(dialog.getToAddress() != user.getExtension()){
+                number = dialog.getToAddress();
+                direction.desc = "Consult From";
+                direction.dir = "in";
+              }
+            break;
             case "CONFERENCE":
               number = dialog.getFromAddress();
               direction.desc = "Conference In";

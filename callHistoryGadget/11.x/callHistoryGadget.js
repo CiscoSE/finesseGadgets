@@ -405,11 +405,15 @@ finesse.modules.callHistoryGadget = (function ($) {
 		    				number = dialog.getFromAddress();
 		    				direction.desc = "Consult From";
                 direction.dir = "in";
-		    			}else{
+		    			}else if(dialog.getFromAddress() == user.getExtension()){
 		    				number = dialog.getToAddress();
 		    				direction.desc = "Consult To";
                 direction.dir = "out";
-		    			}
+		    			}else if(dialog.getToAddress() != user.getExtension()){
+                number = dialog.getToAddress();
+                direction.desc = "Consult From";
+                direction.dir = "in";
+              }
 		    		break;
             case "CONFERENCE":
               number = dialog.getFromAddress();

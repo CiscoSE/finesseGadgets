@@ -338,97 +338,104 @@ finesse.modules.callHistoryGadget = (function ($) {
 		for (i = 0; i < trackDialog.length; i++){
 			if (trackDialog[i].id == dialog._id){
 				switch(trackDialog[i].type){
-		    		case "ACD_IN":
-		    			number = dialog.getFromAddress();
-		    			direction.desc = "Inbound";
-              direction.dir = "in";
-		    		break;
-            case "PREROUTE_ACD_IN":
-              number = dialog.getFromAddress();
-              direction.desc = "Inbound";
-              direction.dir = "in";
-            break;
-            case "PREROUTE_DIRECT_AGENT":
-              number = dialog.getFromAddress();
-              direction.desc = "Inbound";
-              direction.dir = "in";
-            break;
-		    		case "TRANSFER":
-		    			number = dialog.getFromAddress();
-		    			direction.desc = "Transfer In";
-              direction.dir = "in";
-		    		break;
-		    		case "OTHER_IN":
-		    			number = dialog.getFromAddress();
-		    			direction.desc = "Inbound";
-              direction.dir = "in";
-		    		break;
-		    		case "OUT":
-              // fix for initial call type on internal calls showing as "OUT"
-              if (dialog.getToAddress() == user.getExtension()){
-                number = dialog.getFromAddress();
-                direction.desc = "Inbound";
-                direction.dir = "in";
-              }else{
-                number = dialog.getToAddress();
-                direction.desc = "Outbound";
-                direction.dir = "out";
-              }
-		    		break;
-            case "AGENT_INSIDE":
-              if (dialog.getToAddress() == user.getExtension()){
-                number = dialog.getFromAddress();
-                direction.desc = "Inbound";
-                direction.dir = "in";
-              }else{
-                number = dialog.getToAddress();
-                direction.desc = "Outbound";
-                direction.dir = "out";
-              }
-            break;
-		    		case "OUTBOUND":
-		    			number = dialog.getToAddress();
-		    			direction.desc = "Outbound";
-              direction.dir = "out";
-		    		break;
-            case "OUTBOUND_PREVIEW":
-              number = dialog.getToAddress();
-              direction.desc = "Preview Out";
-              direction.dir = "out";
-            break;
-            case "OUTBOUND_DIRECT_PREVIEW":
-              direction.desc = "SM";
-              direction.dir = "SM";
-            break;
-		    		case "CONSULT":
-		    			if (dialog.getToAddress() == user.getExtension()){
-		    				number = dialog.getFromAddress();
-		    				direction.desc = "Consult From";
-                direction.dir = "in";
-		    			}else if(dialog.getFromAddress() == user.getExtension()){
-		    				number = dialog.getToAddress();
-		    				direction.desc = "Consult To";
-                direction.dir = "out";
-		    			}else if(dialog.getToAddress() != user.getExtension()){
-                number = dialog.getToAddress();
-                direction.desc = "Consult From";
-                direction.dir = "in";
-              }
-		    		break;
-            case "CONFERENCE":
-              number = dialog.getFromAddress();
-              direction.desc = "Conference In";
-              direction.dir = "in";
-              clientLogs.log(dialog.getParticipants());
-            break;
-		    		case "SUPERVISOR_MONITOR":
-		    			direction.desc = "SM";
-              direction.dir = "SM";
-		    		break;
-		    		default:
-		    			number = dialog.getFromAddress();
-		    			direction.desc = "n/a";
-              direction.dir = "n/a";
+					case "ACD_IN":
+						// Fix for CCE calls to a route point
+						if (dialog.getFromAddress() == user.getExtension()){
+							number = dialog.getToAddress();
+							direction.desc = "Outbound";
+							direction.dir = "out";
+						}else{
+							number = dialog.getFromAddress();
+							direction.desc = "Inbound";
+							direction.dir = "in";
+						}
+					break;
+					case "PREROUTE_ACD_IN":
+						number = dialog.getFromAddress();
+						direction.desc = "Inbound";
+						direction.dir = "in";
+					break;
+					case "PREROUTE_DIRECT_AGENT":
+						number = dialog.getFromAddress();
+						direction.desc = "Inbound";
+						direction.dir = "in";
+					break;
+					case "TRANSFER":
+						number = dialog.getFromAddress();
+						direction.desc = "Transfer In";
+						direction.dir = "in";
+					break;
+					case "OTHER_IN":
+						number = dialog.getFromAddress();
+						direction.desc = "Inbound";
+						direction.dir = "in";
+					break;
+					case "OUT":
+						// fix for initial call type on internal calls showing as "OUT"
+						if (dialog.getToAddress() == user.getExtension()){
+							number = dialog.getFromAddress();
+							direction.desc = "Inbound";
+							direction.dir = "in";
+						}else{
+							number = dialog.getToAddress();
+							direction.desc = "Outbound";
+							direction.dir = "out";
+						}
+					break;
+					case "AGENT_INSIDE":
+						if (dialog.getToAddress() == user.getExtension()){
+							number = dialog.getFromAddress();
+							direction.desc = "Inbound";
+							direction.dir = "in";
+						}else{
+							number = dialog.getToAddress();
+							direction.desc = "Outbound";
+							direction.dir = "out";
+						}
+					break;
+					case "OUTBOUND":
+						number = dialog.getToAddress();
+						direction.desc = "Outbound";
+						direction.dir = "out";
+					break;
+					case "OUTBOUND_PREVIEW":
+						number = dialog.getToAddress();
+						direction.desc = "Preview Out";
+						direction.dir = "out";
+					break;
+					case "OUTBOUND_DIRECT_PREVIEW":
+						direction.desc = "SM";
+						direction.dir = "SM";
+					break;
+					case "CONSULT":
+						if (dialog.getToAddress() == user.getExtension()){
+							number = dialog.getFromAddress();
+							direction.desc = "Consult From";
+							direction.dir = "in";
+						}else if(dialog.getFromAddress() == user.getExtension()){
+							number = dialog.getToAddress();
+							direction.desc = "Consult To";
+							direction.dir = "out";
+						}else if(dialog.getToAddress() != user.getExtension()){
+							number = dialog.getToAddress();
+							direction.desc = "Consult From";
+							direction.dir = "in";
+						}
+					break;
+					case "CONFERENCE":
+						number = dialog.getFromAddress();
+						direction.desc = "Conference In";
+						direction.dir = "in";
+						clientLogs.log(dialog.getParticipants());
+					break;
+					case "SUPERVISOR_MONITOR":
+						direction.desc = "SM";
+						direction.dir = "SM";
+					break;
+					default:
+						number = dialog.getFromAddress();
+						direction.desc = "n/a";
+						direction.dir = "n/a";
 				}
 			}
 		}

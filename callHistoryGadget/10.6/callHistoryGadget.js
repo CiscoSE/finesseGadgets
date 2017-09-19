@@ -364,11 +364,18 @@ finesse.modules.callHistoryGadget = (function ($) {
 		for (i = 0; i < trackDialog.length; i++){
 			if (trackDialog[i].id == dialog._id){
 				switch(trackDialog[i].type){
-		    		case "ACD_IN":
-		    			number = dialog.getFromAddress();
-		    			direction.desc = "Inbound";
-              direction.dir = "in";
-		    		break;
+						case "ACD_IN":
+							// Fix for CCE calls to a route point
+							if (dialog.getFromAddress() == user.getExtension()){
+								number = dialog.getToAddress();
+								direction.desc = "Outbound";
+								direction.dir = "out";
+							}else{
+								number = dialog.getFromAddress();
+								direction.desc = "Inbound";
+								direction.dir = "in";
+							}
+						break;
             case "PREROUTE_ACD_IN":
               number = dialog.getFromAddress();
               direction.desc = "Inbound";

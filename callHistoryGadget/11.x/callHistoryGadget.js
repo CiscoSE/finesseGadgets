@@ -104,8 +104,10 @@ finesse.modules.callHistoryGadget = (function ($) {
     	// format the seconds in a format for display
     	var duration = displayTime(seconds);
 
-      // remove + from +e164 formatted numbers
-      if(number[0] === "+"){
+			// remove + from +e164 formatted numbers
+			if(number === null){
+				number = 'n/a';
+			}else if(number[0] === "+"){
         number = number.slice(1);
       }
 

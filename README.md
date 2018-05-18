@@ -15,7 +15,7 @@ SMS Gadget Installation Guide is available <a href="https://github.com/bdm1981/f
 
 If you run into any issues/bugs, please add an issues so I can track it.
 
-Send your questions/feedback to bdm@bdmcomputers.com or @bmcallister
+Send your questions/feedback to bmcallis@cisco.com or @bmcallister
 
 Enjoy,
 

@@ -83,7 +83,6 @@ finesse.modules.callHistoryGadget = (function ($) {
           var sortTime;
   				sortObjectBy(retrievedArray, "date", "A")
           .then(function(calls){
-            clientLogs.log('time sort: '+ calls);
             sortTime = calls;
           });
 

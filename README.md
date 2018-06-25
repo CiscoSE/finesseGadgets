@@ -1,6 +1,9 @@
 # Call History Gadget
 ![](https://s3.amazonaws.com/bdm-files/screenshots/callHistoryOverview.jpg)
 
+### Finesse now offers a native call history gadget in 11.6.
+See the [Release Notes](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cust_contact/contact_center/crs/express_11_6/release/guide/uccx_b_release-notes-for-uccx-116/uccx_b_release-notes-for-uccx-116_chapter_011.html) for complete details.
+
 1. Tally of the agents total inbound/outbound calls and duration for the day
 2. Data can be sorted by clicking on the table header
 3. The Detail field can show information captured by the IVR. For Example an account number

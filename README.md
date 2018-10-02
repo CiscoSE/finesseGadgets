@@ -11,8 +11,12 @@ See the [Release Notes](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cust
 
 Installation instructions are <a href="https://github.com/bdm1981/finesseGadgets/wiki/Call-History-Gadget-Installation-Guide">Here</a>
 
-# Cisco SMS Gadget
+# Cisco SMS Gadget - *Discontinued!*
 ![](https://s3.amazonaws.com/bdm-files/screenshots/ciscoSMSGadget.jpg)
+
+## 10/1/18 - Update
+This gadget was built with Tropo as the SMS platform. Due to a change in Tropo's service offerings, This gadget will not work as is. I am leaving it online for people that would like to adapt it to work with other SMS platforms. For further details on the Tropo changes. Please read [THIS](http://blog.tropo.com/2018/10/01/tropo-winding-down-operations/) post.
+
 
 SMS Gadget Installation Guide is available <a href="https://github.com/bdm1981/finesseGadgets/wiki/SMS-Gadget-Installation-Guide">Here</a>
 
